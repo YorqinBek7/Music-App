@@ -9,7 +9,7 @@ class MusicAppRouters {
     switch (settings.name) {
       case homeScreen:
         return MaterialPageRoute(
-          builder: (context) => const HomeScreen(),
+          builder: (context) => HomeScreen(),
         );
       case splashScreen:
         return MaterialPageRoute(

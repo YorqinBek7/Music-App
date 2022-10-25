@@ -9,9 +9,12 @@ class PlaylistContainers extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      margin: EdgeInsets.symmetric(vertical: 5),
       child: Row(
         children: [
-          const FlutterLogo(),
+          const FlutterLogo(
+            size: 90,
+          ),
           Column(
             children: [
               Text(

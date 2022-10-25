@@ -1,10 +1,60 @@
 // ignore_for_file: prefer_const_literals_to_create_immutables
+import 'dart:io';
 
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
+import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
+import 'package:music_app/ui/home/widgets/bottom_sheet.dart';
 import 'package:music_app/ui/home/widgets/playlists.dart';
+import 'package:music_app/utils/functions.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'dart:developer' as print;
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final AudioPlayer player = AudioPlayer();
+  List<FileSystemEntity> _files = [];
+  List<FileSystemEntity> _songs = [];
+  List<String> _nameSongs = [];
+  String name = "";
+  String name2 = "";
+  @override
+  void initState() {
+    init();
+    super.initState();
+  }
+
+  void init() async {
+    await player.setSource(AssetSource("audios/music_1.mp3"));
+    var permission = await Permission.storage.request();
+
+    if (permission == PermissionStatus.denied) {
+      await Permission.storage.request();
+    }
+
+    Directory dir = Directory('/storage/emulated/0/Music/Telegram/');
+    String mp3Path = dir.toString();
+
+    _files = dir.listSync(recursive: true, followLinks: false);
+    getMusicFromStorage(
+      songs: _songs,
+      files: _files,
+      nameOfReversed: name,
+      nameOfSongs: name2,
+      setState: (value) => {
+        setState(
+          () => {},
+        )
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -72,6 +122,39 @@ class HomeScreen extends StatelessWidget {
                 title: 'Best song 2022',
               ),
             ],
+          ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: _songs.length,
+              itemBuilder: (context, index) => GestureDetector(
+                onTap: () async {
+                  await bottomsheet(
+                      context: context,
+                      index: index,
+                      nameSongs: _nameSongs,
+                      songs: _songs,
+                      player: player);
+                },
+                child: Container(
+                  margin:
+                      const EdgeInsets.symmetric(horizontal: 5, vertical: 10),
+                  decoration: const BoxDecoration(color: Colors.red),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          _nameSongs[index],
+                          style: const TextStyle(
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           )
         ],
       ),
