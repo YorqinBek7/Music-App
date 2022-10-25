@@ -20,6 +20,9 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final AudioPlayer player = AudioPlayer();
+  bool isPlaying = false;
+  int activeSongIndex = -1;
+  String activeSongName = "";
   List<FileSystemEntity> _files = [];
   List<FileSystemEntity> _songs = [];
   List<String> _nameSongs = [];
@@ -41,19 +44,28 @@ class _HomeScreenState extends State<HomeScreen> {
 
     Directory dir = Directory('/storage/emulated/0/Music/Telegram/');
     String mp3Path = dir.toString();
-
     _files = dir.listSync(recursive: true, followLinks: false);
-    getMusicFromStorage(
-      songs: _songs,
-      files: _files,
-      nameOfReversed: name,
-      nameOfSongs: name2,
-      setState: (value) => {
-        setState(
-          () => {},
-        )
-      },
-    );
+    for (FileSystemEntity entity in _files) {
+      String path = entity.path;
+      if (path.endsWith('.mp3')) _songs.add(entity);
+    }
+
+    for (int i = 0; i < _songs.length; i++) {
+      name = "";
+      name2 = "";
+      for (var j = _songs[i].path.length - 1; j >= 0; j--) {
+        if (_songs[i].path[j] == "/") {
+          break;
+        } else {
+          name += _songs[i].path[j];
+        }
+      }
+      for (int j = name.length - 1; j >= 0; j--) {
+        name2 += name[j];
+      }
+      _nameSongs.add(name2);
+    }
+    setState(() {});
   }
 
   @override
@@ -103,10 +115,12 @@ class _HomeScreenState extends State<HomeScreen> {
               const PlaylistContainers(
                 byWho: 'noone',
                 title: 'Best song 2022',
+                image: 'assets/images/chill_vocer.jpg',
               ),
               const PlaylistContainers(
                 byWho: 'noone',
                 title: 'Best song 2022',
+                image: 'assets/images/nature_cover.jpg',
               ),
             ],
           ),
@@ -116,46 +130,86 @@ class _HomeScreenState extends State<HomeScreen> {
               const PlaylistContainers(
                 byWho: 'noone',
                 title: 'Best song 2022',
+                image: 'assets/images/pop_cover.jpg',
               ),
               const PlaylistContainers(
                 byWho: 'noone',
                 title: 'Best song 2022',
+                image: 'assets/images/rock_cover.jpg',
               ),
             ],
+          ),
+          const Text(
+            "Songs",
+            style: TextStyle(
+                color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
           ),
           Expanded(
             child: ListView.builder(
               itemCount: _songs.length,
               itemBuilder: (context, index) => GestureDetector(
                 onTap: () async {
-                  await bottomsheet(
-                      context: context,
-                      index: index,
-                      nameSongs: _nameSongs,
-                      songs: _songs,
-                      player: player);
+                  isPlaying = true;
+                  activeSongIndex = index;
+                  activeSongName = _nameSongs[index].split("-")[0];
+                  player.play(DeviceFileSource(_files[index].path));
+                  setState(() {});
                 },
-                child: Container(
-                  margin:
-                      const EdgeInsets.symmetric(horizontal: 5, vertical: 10),
-                  decoration: const BoxDecoration(color: Colors.red),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          _nameSongs[index],
-                          style: const TextStyle(
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ],
+                child: ListTile(
+                  title: Text(
+                    _nameSongs[index].split("-")[0].toString(),
+                    style: const TextStyle(
+                      color: Colors.white,
+                    ),
+                  ),
+                  subtitle: Text(
+                    _nameSongs[index].split("-").length > 1
+                        ? _nameSongs[index].split("-")[1]
+                        : "Undifined",
+                    style: const TextStyle(
+                      color: Colors.grey,
+                    ),
                   ),
                 ),
               ),
             ),
-          )
+          ),
+          Visibility(
+            visible: isPlaying,
+            child: GestureDetector(
+              onTap: () async {
+                await bottomsheet(
+                  context: context,
+                  index: activeSongIndex,
+                  nameSongs: _nameSongs,
+                  songs: _songs,
+                  player: player,
+                );
+              },
+              child: Container(
+                width: double.infinity,
+                decoration: BoxDecoration(color: Colors.white),
+                child: Row(children: [
+                  Text(
+                    activeSongName,
+                    style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold),
+                  ),
+                  Spacer(),
+                  IconButton(
+                    onPressed: () {
+                      isPlaying = !isPlaying;
+                      player.pause();
+                      setState(() {});
+                    },
+                    icon: Icon(isPlaying ? Icons.pause : Icons.play_arrow),
+                  )
+                ]),
+              ),
+            ),
+          ),
         ],
       ),
     );
