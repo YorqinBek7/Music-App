@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:music_app/ui/home/home_screen.dart';
+import 'package:music_app/ui/playlist/playlist_screen.dart';
 import 'package:music_app/ui/splash/splash_screen.dart';
 
 import 'package:music_app/utils/constants.dart';
@@ -9,11 +10,19 @@ class MusicAppRouters {
     switch (settings.name) {
       case homeScreen:
         return MaterialPageRoute(
-          builder: (context) => HomeScreen(),
+          builder: (context) => const HomeScreen(),
         );
       case splashScreen:
         return MaterialPageRoute(
           builder: (context) => const SplashScreen(),
+        );
+
+      case playlistScreen:
+        final args = settings.arguments;
+        return MaterialPageRoute(
+          builder: (context) => PlaylistScreen(
+            namePlaylist: args as String,
+          ),
         );
       default:
         return MaterialPageRoute(
