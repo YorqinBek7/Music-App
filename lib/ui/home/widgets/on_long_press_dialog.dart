@@ -17,7 +17,7 @@ Future<dynamic> onLongPressDialog(BuildContext context) {
               title: Text("Add to playlist", style: MusicAppTextStyle.w500),
               trailing: Icon(
                 Icons.playlist_add,
-                color: MusicAppColor.C_00FF00,
+                color: MusicAppColor.C_1E1E29,
               ),
             ),
             ListTile(

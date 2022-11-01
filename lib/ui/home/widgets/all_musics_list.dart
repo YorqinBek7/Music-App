@@ -2,7 +2,9 @@ import 'dart:io';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lottie/lottie.dart';
+import 'package:music_app/cubit/music_cubit.dart';
 import 'package:music_app/ui/home/widgets/on_long_press_dialog.dart';
 import 'package:music_app/utils/color.dart';
 import 'package:music_app/utils/text_style.dart';
@@ -10,19 +12,13 @@ import 'package:music_app/utils/text_style.dart';
 class AllMusicsList extends StatelessWidget {
   List<FileSystemEntity> songs;
   List<String> nameSongs;
-  int activeSongIndex;
-  bool isPlaying;
 
-  String activeSongName;
   AudioPlayer player;
 
   AllMusicsList({
     super.key,
     required this.songs,
     required this.nameSongs,
-    required this.activeSongIndex,
-    required this.isPlaying,
-    required this.activeSongName,
     required this.player,
   });
 
@@ -34,9 +30,10 @@ class AllMusicsList extends StatelessWidget {
       itemCount: songs.length,
       itemBuilder: (context, index) => GestureDetector(
         onTap: () async {
-          isPlaying = true;
-          activeSongIndex = index;
-          activeSongName = nameSongs[index].split("-")[0];
+          context.read<MusicCubit>().isPlaying = true;
+          context.read<MusicCubit>().activeSongIndex = index;
+          context.read<MusicCubit>().activeSongName =
+              nameSongs[index].split("-")[0];
           player.play(DeviceFileSource(songs[index].path));
         },
         onLongPress: () => {onLongPressDialog(context)},
@@ -54,7 +51,7 @@ class AllMusicsList extends StatelessWidget {
                 : "Undifined",
             style: MusicAppTextStyle.w500.copyWith(color: MusicAppColor.grey),
           ),
-          trailing: activeSongIndex == index
+          trailing: context.read<MusicCubit>().activeSongIndex == index
               ? LottieBuilder.asset(
                   "assets/lotties/default_music.json",
                   width: 30,
