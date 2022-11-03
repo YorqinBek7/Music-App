@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -7,12 +9,13 @@ import 'package:music_app/cubit/music_cubit.dart';
 import 'package:music_app/utils/color.dart';
 import 'package:music_app/utils/text_style.dart';
 
-Duration currentPosition = Duration();
 bottomsheet({
   required BuildContext context,
   required List<String> nameSongs,
   required AudioPlayer player,
   required Duration musicDuration,
+  required Duration currentPosition,
+  required int currentMusicIndex,
 }) async {
   showMaterialModalBottomSheet(
     backgroundColor: MusicAppColor.C_536987,
@@ -21,13 +24,20 @@ bottomsheet({
       return StatefulBuilder(
         builder: (BuildContext context, StateSetter setState) {
           player.onPositionChanged.listen(
-            (event) => {
-              currentPosition = event,
-              setState(
-                () => {},
-              )
+            (position) => {
+              currentPosition = position,
+              setState(() => {}),
             },
           );
+          player.onDurationChanged.listen(
+            (duration) => musicDuration = duration,
+          );
+          player.onPlayerStateChanged.listen((event) {
+            if (event == PlayerState.completed) {
+              context.read<MusicCubit>().changeToNextMusic();
+              setState(() {});
+            }
+          });
           return SizedBox(
             height: MediaQuery.of(context).size.height * .95,
             child: Column(
@@ -40,18 +50,20 @@ bottomsheet({
                       "assets/lotties/default_music.json",
                       animate: context.read<MusicCubit>().isPlaying,
                     )),
-                Text(
-                  nameSongs[context.read<MusicCubit>().activeSongIndex],
-                  style: MusicAppTextStyle.w500,
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(
+                    nameSongs[context.read<MusicCubit>().activeSongIndex],
+                    style: MusicAppTextStyle.w500,
+                  ),
                 ),
                 Slider(
                     max: musicDuration.inSeconds.toDouble(),
                     onChanged: (double value) {
                       player.seek(Duration(seconds: value.toInt()));
+                      player.resume();
                       currentPosition = Duration(seconds: value.toInt());
-                      setState(
-                        () => {},
-                      );
+                      setState(() => {});
                     },
                     value: currentPosition.inSeconds.toDouble()),
                 Row(
@@ -62,13 +74,11 @@ bottomsheet({
                       decoration: const BoxDecoration(
                           color: MusicAppColor.white, shape: BoxShape.circle),
                       child: IconButton(
-                        onPressed: () {
+                        onPressed: () async {
                           setState(() => {});
+                          context.read<MusicCubit>().changeToPreviousMusic();
                         },
-                        icon: const Icon(
-                          Icons.skip_previous,
-                          size: 25,
-                        ),
+                        icon: const Icon(Icons.skip_previous, size: 25),
                       ),
                     ),
                     Container(
@@ -77,8 +87,7 @@ bottomsheet({
                           color: MusicAppColor.white, shape: BoxShape.circle),
                       child: IconButton(
                         onPressed: () async {
-                          context.read<MusicCubit>().isPlaying =
-                              !context.read<MusicCubit>().isPlaying;
+                          context.read<MusicCubit>().changeToPlayOrPause();
                           context.read<MusicCubit>().isPlaying
                               ? await player.resume()
                               : await player.pause();
@@ -97,10 +106,9 @@ bottomsheet({
                       decoration: const BoxDecoration(
                           color: MusicAppColor.white, shape: BoxShape.circle),
                       child: IconButton(
-                        onPressed: () {
-                          setState(
-                            () => {},
-                          );
+                        onPressed: () async {
+                          context.read<MusicCubit>().changeToNextMusic();
+                          setState(() {});
                         },
                         icon: const Icon(
                           Icons.skip_next,
@@ -116,5 +124,7 @@ bottomsheet({
         },
       );
     },
-  );
+  ).whenComplete(() {
+    context.read<MusicCubit>().bottomSheetClose();
+  });
 }

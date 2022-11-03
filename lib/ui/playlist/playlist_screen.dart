@@ -1,17 +1,14 @@
-import 'dart:io';
-import 'dart:math';
+// ignore_for_file: use_build_context_synchronously
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:get_storage/get_storage.dart';
 import 'package:lottie/lottie.dart';
 import 'package:music_app/cubit/music_cubit.dart';
+import 'package:music_app/data/shared_preferences.dart';
 import 'package:music_app/ui/home/widgets/bottom_sheet.dart';
-import 'package:music_app/ui/home/widgets/on_long_press_dialog.dart';
 import 'package:music_app/ui/home/widgets/visible_bottom_sheet.dart';
 import 'package:music_app/utils/color.dart';
 import 'package:music_app/utils/text_style.dart';
-import 'dart:developer' as p;
 
 class PlaylistScreen extends StatefulWidget {
   final String namePlaylist;
@@ -22,13 +19,10 @@ class PlaylistScreen extends StatefulWidget {
   State<PlaylistScreen> createState() => _PlaylistScreenState();
 }
 
-class _PlaylistScreenState extends State<PlaylistScreen>
-    with SingleTickerProviderStateMixin {
-  final AudioPlayer player = AudioPlayer();
-
-  late Directory dir;
-  List<FileSystemEntity> list = [];
-  List<String> _nameSongs = [];
+class _PlaylistScreenState extends State<PlaylistScreen> {
+  int currentMusicIndex = 0;
+  Duration musicDuraition = const Duration();
+  Duration currentPosition = const Duration();
 
   @override
   void initState() {
@@ -70,38 +64,50 @@ class _PlaylistScreenState extends State<PlaylistScreen>
                 )),
             Expanded(
                 child: ListView.builder(
-                    itemCount: list.length,
+                    itemCount:
+                        context.read<MusicCubit>().songsNameInPlayList.length,
                     itemBuilder: (context, index) {
                       return GestureDetector(
                         onTap: () async {
-                          p.log(player.getDuration().toString());
-                          await player.stop();
-
-                          context.read<MusicCubit>().isPlaying = true;
-                          context.read<MusicCubit>().isShowBottomSheet = true;
-
-                          context.read<MusicCubit>().activeSongIndex = index;
-                          context.read<MusicCubit>().activeSongName =
-                              _nameSongs[index].split("-")[0];
-                          await player.play(DeviceFileSource(await GetStorage()
-                              .read("favorites")[index]
-                              .path));
+                          currentMusicIndex = index;
+                          context
+                              .read<MusicCubit>()
+                              .playMusicInPlayList(index: index);
+                          await context.read<MusicCubit>().player.play(
+                              DeviceFileSource(context
+                                  .read<MusicCubit>()
+                                  .songsNameInPlayList[index]));
+                          musicDuraition = (await context
+                              .read<MusicCubit>()
+                              .player
+                              .getDuration())!;
+                          currentPosition = (await context
+                              .read<MusicCubit>()
+                              .player
+                              .getCurrentPosition())!;
                           setState(() {});
                         },
-                        onLongPress: () => {onLongPressDialog(context)},
                         child: ListTile(
-                          leading: ClipRRect(
-                              borderRadius: BorderRadius.circular(10),
-                              child: Image.asset(
-                                  "assets/images/default_image.jpg")),
                           title: Text(
-                            _nameSongs[index].split("-")[0].toString(),
+                            context
+                                .read<MusicCubit>()
+                                .songsNameInPlayList[index]
+                                .split("-")[0]
+                                .toString(),
                             style: MusicAppTextStyle.w500
                                 .copyWith(color: MusicAppColor.white),
                           ),
                           subtitle: Text(
-                            _nameSongs[index].split("-").length > 1
-                                ? _nameSongs[index].split("-")[1]
+                            context
+                                        .read<MusicCubit>()
+                                        .songsNameInPlayList[index]
+                                        .split("-")
+                                        .length >
+                                    1
+                                ? context
+                                    .read<MusicCubit>()
+                                    .songsNameInPlayList[index]
+                                    .split("-")[1]
                                 : "Undifined",
                             style: MusicAppTextStyle.w500
                                 .copyWith(color: MusicAppColor.grey),
@@ -121,22 +127,19 @@ class _PlaylistScreenState extends State<PlaylistScreen>
               context: context,
               tapToBottomSheet: () async {
                 await bottomsheet(
-                  musicDuration: Duration(),
+                  musicDuration: musicDuraition,
                   context: context,
-                  nameSongs: _nameSongs,
-                  player: player,
+                  nameSongs: context.read<MusicCubit>().songsNameInPlayList,
+                  player: context.read<MusicCubit>().player,
+                  currentPosition: currentPosition,
+                  currentMusicIndex: 0,
                 );
               },
               tapToPlay: () async {
-                context.read<MusicCubit>().isPlaying =
-                    !context.read<MusicCubit>().isPlaying;
-                context.watch<MusicCubit>().isPlaying
-                    ? await player.resume()
-                    : await player.pause();
-
+                context.read<MusicCubit>().changeToPlayOrPausePlayList();
                 setState(() {});
               },
-              player: player,
+              player: context.read<MusicCubit>().player,
             ),
           ],
         ),
@@ -145,21 +148,13 @@ class _PlaylistScreenState extends State<PlaylistScreen>
   }
 
   init() async {
-    list = await GetStorage().read("favorites");
+    await StorageRepository.getInstance();
+    context.read<MusicCubit>().readFromStorage();
+    context.read<MusicCubit>().getMusicsFromPlaylists();
+    context.read<MusicCubit>().addMusicsNameInPlaylist();
+    context.read<MusicCubit>().musicsInPlaylist =
+        StorageRepository.getList("favorites");
 
-    for (var i = 0; i < list.length; i++) {
-      for (var j = list[i].path.length - 1; j >= 0; j--) {
-        if (list[i].path[j] == "/") {
-          context.read<MusicCubit>().slashIndexOfName = j;
-          break;
-        }
-      }
-    }
-    for (var i = 0; i < list.length; i++) {
-      _nameSongs.add(await GetStorage().read("favorites")[i].path.substring(
-          context.read<MusicCubit>().slashIndexOfName + 1,
-          await GetStorage().read("favorites")[i].path.length));
-    }
     setState(() {});
   }
 }
