@@ -1,6 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:audioplayers/audioplayers.dart';
+import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
@@ -106,6 +107,16 @@ class _HomeScreenState extends State<HomeScreen> {
                             cubitRead.nameSongs[index].split("-");
                         return GestureDetector(
                           onTap: () async {
+                            AwesomeNotifications().createNotification(
+                              content: NotificationContent(
+                                id: 10,
+                                channelKey: 'basic_channel',
+                                title:
+                                    context.read<MusicCubit>().activeSongName,
+                                body: 'Simple body',
+                                actionType: ActionType.Default,
+                              ),
+                            );
                             cubitRead.playMusic(index: index);
                             musicDuraition =
                                 (await cubitRead.player.getDuration())!;
