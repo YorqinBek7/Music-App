@@ -32,36 +32,38 @@ class _PlaylistScreenState extends State<PlaylistScreen> {
 
   @override
   Widget build(BuildContext context) {
+    var cubitRead = context.read<MusicCubit>();
     return Scaffold(
       backgroundColor: MusicAppColor.C_0F0F1D,
       body: SafeArea(
         child: Column(
           children: [
             Container(
-                margin: const EdgeInsets.symmetric(vertical: 10),
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(
-                        Icons.arrow_back_ios,
-                        color: MusicAppColor.white,
-                      ),
-                      onPressed: () => {
-                        Navigator.pop(context),
-                      },
+              margin: const EdgeInsets.symmetric(vertical: 10),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(
+                      Icons.arrow_back_ios,
+                      color: MusicAppColor.white,
                     ),
-                    const Spacer(),
-                    Image.asset(
-                      "assets/images/favorite_playlist.png",
-                      width: 60,
-                    ),
-                    Text(
-                      widget.namePlaylist,
-                      style: MusicAppTextStyle.w500,
-                    ),
-                    const Spacer(),
-                  ],
-                )),
+                    onPressed: () => {
+                      Navigator.pop(context),
+                    },
+                  ),
+                  const Spacer(),
+                  Image.asset(
+                    "assets/images/favorite_playlist.png",
+                    width: 60,
+                  ),
+                  Text(
+                    widget.namePlaylist,
+                    style: MusicAppTextStyle.w500,
+                  ),
+                  const Spacer(),
+                ],
+              ),
+            ),
             Expanded(
                 child: ListView.builder(
                     itemCount:
@@ -73,53 +75,44 @@ class _PlaylistScreenState extends State<PlaylistScreen> {
                           context
                               .read<MusicCubit>()
                               .playMusicInPlayList(index: index);
-                          await context.read<MusicCubit>().player.play(
-                              DeviceFileSource(context
-                                  .read<MusicCubit>()
-                                  .songsNameInPlayList[index]));
-                          musicDuraition = (await context
-                              .read<MusicCubit>()
-                              .player
-                              .getDuration())!;
-                          currentPosition = (await context
-                              .read<MusicCubit>()
-                              .player
-                              .getCurrentPosition())!;
+                          await cubitRead.player.play(
+                            cubitRead.whichPlaylist == 0
+                                ? DeviceFileSource(
+                                    cubitRead.musicsInfavorites[index])
+                                : DeviceFileSource(
+                                    cubitRead.musicsInOtherSongs[index]),
+                          );
+                          musicDuraition =
+                              (await cubitRead.player.getDuration())!;
+                          currentPosition =
+                              (await cubitRead.player.getCurrentPosition())!;
                           setState(() {});
                         },
                         child: ListTile(
                           title: Text(
-                            context
-                                .read<MusicCubit>()
-                                .songsNameInPlayList[index]
+                            cubitRead.songsNameInPlayList[index]
                                 .split("-")[0]
                                 .toString(),
                             style: MusicAppTextStyle.w500
                                 .copyWith(color: MusicAppColor.white),
                           ),
                           subtitle: Text(
-                            context
-                                        .read<MusicCubit>()
-                                        .songsNameInPlayList[index]
+                            cubitRead.songsNameInPlayList[index]
                                         .split("-")
                                         .length >
                                     1
-                                ? context
-                                    .read<MusicCubit>()
-                                    .songsNameInPlayList[index]
+                                ? cubitRead.songsNameInPlayList[index]
                                     .split("-")[1]
                                 : "Undifined",
                             style: MusicAppTextStyle.w500
                                 .copyWith(color: MusicAppColor.grey),
                           ),
-                          trailing:
-                              context.watch<MusicCubit>().activeSongIndex ==
-                                      index
-                                  ? LottieBuilder.asset(
-                                      "assets/lotties/default_music.json",
-                                      width: 30,
-                                    )
-                                  : const SizedBox(),
+                          trailing: cubitRead.activeSongIndex == index
+                              ? LottieBuilder.asset(
+                                  "assets/lotties/default_music.json",
+                                  width: 30,
+                                )
+                              : const SizedBox(),
                         ),
                       );
                     })),
@@ -129,17 +122,17 @@ class _PlaylistScreenState extends State<PlaylistScreen> {
                 await bottomsheet(
                   musicDuration: musicDuraition,
                   context: context,
-                  nameSongs: context.read<MusicCubit>().songsNameInPlayList,
-                  player: context.read<MusicCubit>().player,
+                  nameSongs: cubitRead.songsNameInPlayList,
+                  player: cubitRead.player,
                   currentPosition: currentPosition,
                   currentMusicIndex: 0,
                 );
               },
               tapToPlay: () async {
-                context.read<MusicCubit>().changeToPlayOrPausePlayList();
+                cubitRead.changeToPlayOrPausePlayList();
                 setState(() {});
               },
-              player: context.read<MusicCubit>().player,
+              player: cubitRead.player,
             ),
           ],
         ),
@@ -152,8 +145,11 @@ class _PlaylistScreenState extends State<PlaylistScreen> {
     context.read<MusicCubit>().readFromStorage();
     context.read<MusicCubit>().getMusicsFromPlaylists();
     context.read<MusicCubit>().addMusicsNameInPlaylist();
-    context.read<MusicCubit>().musicsInPlaylist =
-        StorageRepository.getList("favorites");
+    context.read<MusicCubit>().whichPlaylist == 0
+        ? context.read<MusicCubit>().musicsInfavorites =
+            StorageRepository.getList("favorites")
+        : context.read<MusicCubit>().musicsInOtherSongs =
+            StorageRepository.getList("songs");
 
     setState(() {});
   }

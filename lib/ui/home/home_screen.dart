@@ -36,6 +36,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    var cubitRead = context.read<MusicCubit>();
     return Scaffold(
       resizeToAvoidBottomInset: false,
       backgroundColor: MusicAppColor.C_080812,
@@ -48,9 +49,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: BlocListener<MusicCubit, MusicState>(
         listener: (context, state) {
-          if (state is BottomSheetClosed) {
-            setState(() {});
-          }
+          if (state is BottomSheetClosed) setState(() {});
         },
         child: Column(
           children: [
@@ -72,6 +71,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           title: 'My favorites',
                           image: 'assets/images/favorite_playlist.png',
                           onTap: () {
+                            context.read<MusicCubit>().whichPlaylist = 0;
                             Navigator.pushNamed(
                               context,
                               playlistScreen,
@@ -83,6 +83,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           title: 'Best song 2022',
                           image: 'assets/images/new_musics.png',
                           onTap: () {
+                            cubitRead.whichPlaylist = 1;
                             Navigator.pushNamed(
                               context,
                               playlistScreen,
@@ -99,44 +100,32 @@ class _HomeScreenState extends State<HomeScreen> {
                     ListView.builder(
                       shrinkWrap: true,
                       physics: const BouncingScrollPhysics(),
-                      itemCount: context.read<MusicCubit>().songs.length,
+                      itemCount: cubitRead.songs.length,
                       itemBuilder: (context, index) {
-                        List<String> subtitle = context
-                            .read<MusicCubit>()
-                            .nameSongs[index]
-                            .split("-");
+                        List<String> subtitle =
+                            cubitRead.nameSongs[index].split("-");
                         return GestureDetector(
                           onTap: () async {
-                            context.read<MusicCubit>().playMusic(index: index);
-                            musicDuraition = (await context
-                                .read<MusicCubit>()
-                                .player
-                                .getDuration())!;
+                            cubitRead.playMusic(index: index);
+                            musicDuraition =
+                                (await cubitRead.player.getDuration())!;
                             currentMusicIndex = index;
-                            currentPosition = (await context
-                                .read<MusicCubit>()
-                                .player
-                                .getCurrentPosition())!;
-                            await context.read<MusicCubit>().player.play(
-                                DeviceFileSource(context
-                                    .read<MusicCubit>()
-                                    .songs[index]
-                                    .path));
+                            currentPosition =
+                                (await cubitRead.player.getCurrentPosition())!;
+                            await cubitRead.player.play(
+                                DeviceFileSource(cubitRead.songs[index].path));
                             setState(() {});
                           },
                           onLongPress: () async {
                             onLongPressDialog(
                               context: context,
-                              song:
-                                  context.read<MusicCubit>().songs[index].path,
+                              song: cubitRead.songs[index].path,
                               indexSelectedMusic: index,
                             );
                           },
                           child: ListTile(
                             title: Text(
-                              context
-                                  .read<MusicCubit>()
-                                  .nameSongs[index]
+                              cubitRead.nameSongs[index]
                                   .split("-")[0]
                                   .toString(),
                               style: MusicAppTextStyle.w500.copyWith(
@@ -149,10 +138,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               style: MusicAppTextStyle.w500.copyWith(
                                   color: MusicAppColor.grey, fontSize: 12),
                             ),
-                            trailing: context
-                                        .read<MusicCubit>()
-                                        .activeSongIndex ==
-                                    index
+                            trailing: cubitRead.activeSongIndex == index
                                 ? LottieBuilder.asset(
                                     "assets/lotties/default_music.json",
                                     width: 20,
@@ -174,17 +160,17 @@ class _HomeScreenState extends State<HomeScreen> {
                 await bottomsheet(
                   musicDuration: musicDuraition,
                   context: context,
-                  nameSongs: context.read<MusicCubit>().nameSongs,
-                  player: context.read<MusicCubit>().player,
+                  nameSongs: cubitRead.nameSongs,
+                  player: cubitRead.player,
                   currentPosition: currentPosition,
                   currentMusicIndex: currentMusicIndex,
                 );
               },
               tapToPlay: () async {
-                context.read<MusicCubit>().changeToPlayOrPause();
+                cubitRead.changeToPlayOrPause();
                 setState(() {});
               },
-              player: context.read<MusicCubit>().player,
+              player: cubitRead.player,
             ),
           ],
         ),
@@ -194,10 +180,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void init() async {
     permission = await Permission.storage.request();
-    if (permission == PermissionStatus.granted) {
-      FlutterNativeSplash.remove();
-    }
-
+    if (permission == PermissionStatus.granted) FlutterNativeSplash.remove();
     context
         .read<MusicCubit>()
         .getMusicsFromStorage(directory: '/storage/emulated/0/Music/');

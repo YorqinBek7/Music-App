@@ -18,6 +18,7 @@ class MusicCubit extends Cubit<MusicState> {
   List<FileSystemEntity> songs = [];
   List<String> nameSongs = [];
   List<FileSystemEntity> files = [];
+  int whichPlaylist = -1;
   late Directory dir;
 
   void bottomSheetClose() => emit(BottomSheetClosed());
@@ -82,33 +83,60 @@ class MusicCubit extends Cubit<MusicState> {
 
   //////////////////////////// PlayList Screen ///////////////////////////////////////
 
-  List<String> musicsInPlaylist = [];
+  List<String> musicsInfavorites = [];
+  List<String> musicsInOtherSongs = [];
   List<String> songsNameInPlayList = [];
 
   void readFromStorage() async {
-    musicsInPlaylist = (StorageRepository.getList("favorites"));
+    musicsInfavorites = whichPlaylist == 0
+        ? StorageRepository.getList("favorites")
+        : StorageRepository.getList("songs");
   }
 
   void getMusicsFromPlaylists() {
-    for (var i = 0; i < musicsInPlaylist.length; i++) {
-      for (var j = musicsInPlaylist[i].length - 1; j >= 0; j--) {
-        if (musicsInPlaylist[i][j] == "/") {
-          slashIndexOfName = j;
-          break;
+    if (whichPlaylist == 0) {
+      for (var i = 0; i < musicsInfavorites.length; i++) {
+        for (var j = musicsInfavorites[i].length - 1; j >= 0; j--) {
+          if (musicsInfavorites[i][j] == "/") {
+            slashIndexOfName = j;
+            break;
+          }
+        }
+      }
+    } else if (whichPlaylist == 1) {
+      for (var i = 0; i < musicsInOtherSongs.length; i++) {
+        for (var j = musicsInOtherSongs[i].length - 1; j >= 0; j--) {
+          if (musicsInOtherSongs[i][j] == "/") {
+            slashIndexOfName = j;
+            break;
+          }
         }
       }
     }
   }
 
   void addMusicsNameInPlaylist() async {
-    List<String> musics = [];
-    musics = StorageRepository.getList("favorites");
-    for (var i = 0; i < musicsInPlaylist.length; i++) {
-      songsNameInPlayList
-          .add(musics[i].substring(slashIndexOfName + 1, musics[i].length));
+    if (whichPlaylist == 0) {
+      List<String> musics = [];
+      songsNameInPlayList = [];
+      musics = StorageRepository.getList("favorites");
+      for (var i = 0; i < musicsInfavorites.length; i++) {
+        songsNameInPlayList
+            .add(musics[i].substring(slashIndexOfName + 1, musics[i].length));
+      }
+      var set = songsNameInPlayList.toSet();
+      songsNameInPlayList = set.toList();
+    } else if (whichPlaylist == 1) {
+      List<String> musics = [];
+      songsNameInPlayList = [];
+      musics = StorageRepository.getList("songs");
+      for (var i = 0; i < musicsInOtherSongs.length; i++) {
+        songsNameInPlayList
+            .add(musics[i].substring(slashIndexOfName + 1, musics[i].length));
+      }
+      var set = songsNameInPlayList.toSet();
+      songsNameInPlayList = set.toList();
     }
-    var set = songsNameInPlayList.toSet();
-    songsNameInPlayList = set.toList();
   }
 
   void playMusicInPlayList({required index}) {
