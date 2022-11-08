@@ -1,6 +1,4 @@
-// ignore_for_file: use_build_context_synchronously
 import 'package:audioplayers/audioplayers.dart';
-import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lottie/lottie.dart';
@@ -13,9 +11,7 @@ import 'package:music_app/utils/text_style.dart';
 
 class PlaylistScreen extends StatefulWidget {
   final String namePlaylist;
-
   const PlaylistScreen({super.key, required this.namePlaylist});
-
   @override
   State<PlaylistScreen> createState() => _PlaylistScreenState();
 }
@@ -142,7 +138,6 @@ class _PlaylistScreenState extends State<PlaylistScreen> {
   }
 
   init() async {
-    await StorageRepository.getInstance();
     context.read<MusicCubit>().readFromStorage();
     context.read<MusicCubit>().getMusicsFromPlaylists();
     context.read<MusicCubit>().addMusicsNameInPlaylist();
@@ -151,7 +146,6 @@ class _PlaylistScreenState extends State<PlaylistScreen> {
             StorageRepository.getList("favorites")
         : context.read<MusicCubit>().musicsInOtherSongs =
             StorageRepository.getList("songs");
-
     setState(() {});
   }
 }

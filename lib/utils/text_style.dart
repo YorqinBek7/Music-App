@@ -13,7 +13,6 @@ class MusicAppTextStyle {
     fontWeight: FontWeight.w500,
     fontSize: 14,
   );
-
   static const TextStyle w400 = TextStyle(
     color: MusicAppColor.white,
     fontWeight: FontWeight.w400,

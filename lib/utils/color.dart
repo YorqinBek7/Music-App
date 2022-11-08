@@ -7,8 +7,10 @@ class MusicAppColor {
   static const Color C_404C6C = Color(0xff404C6C);
   static const Color C_1E1E29 = Color(0xff1E1E29);
   static const Color C_536987 = Color(0xff536987);
+  static const Color C_FAFAFA = Color(0xffFAFAFA);
   static const Color white = Color(0xffffffff);
   static const Color red = Color(0xffFF0000);
   static const Color grey = Color(0xff808080);
   static const Color blue = Color(0xff0000FF);
+  static const Color black = Color(0xff000000);
 }

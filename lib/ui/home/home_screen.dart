@@ -1,20 +1,19 @@
-// ignore_for_file: use_build_context_synchronously
-
+import 'package:adaptive_theme/adaptive_theme.dart';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:awesome_notifications/awesome_notifications.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:lottie/lottie.dart';
 import 'package:music_app/cubit/music_cubit.dart';
+import 'package:music_app/data/shared_preferences.dart';
 import 'package:music_app/ui/home/widgets/bottom_sheet.dart';
 import 'package:music_app/ui/home/widgets/on_long_press_dialog.dart';
 import 'package:music_app/ui/home/widgets/playlists.dart';
 import 'package:music_app/ui/home/widgets/visible_bottom_sheet.dart';
-import 'package:music_app/utils/color.dart';
 import 'package:music_app/utils/constants.dart';
-import 'package:music_app/utils/text_style.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:toggle_switch/toggle_switch.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -40,12 +39,11 @@ class _HomeScreenState extends State<HomeScreen> {
     var cubitRead = context.read<MusicCubit>();
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      backgroundColor: MusicAppColor.C_080812,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         centerTitle: true,
-        title: Text("Music App",
-            style: MusicAppTextStyle.w500.copyWith(fontSize: 24)),
-        backgroundColor: MusicAppColor.C_080812,
+        title: Text("Music App", style: Theme.of(context).textTheme.headline4),
+        backgroundColor: Theme.of(context).backgroundColor,
         elevation: 0,
       ),
       body: BlocListener<MusicCubit, MusicState>(
@@ -54,6 +52,32 @@ class _HomeScreenState extends State<HomeScreen> {
         },
         child: Column(
           children: [
+            ToggleSwitch(
+              minWidth: 90.0,
+              minHeight: 40.0,
+              initialLabelIndex: 0,
+              cornerRadius: 20.0,
+              activeFgColor: Colors.white,
+              inactiveBgColor: Colors.grey,
+              inactiveFgColor: Colors.white,
+              totalSwitches: 2,
+              icons: const [Icons.light_mode, Icons.dark_mode],
+              iconSize: 30.0,
+              activeBgColors: const [
+                [Colors.black45, Colors.black26],
+                [Colors.yellow, Colors.orange]
+              ],
+              animate: true,
+              curve: Curves.bounceInOut,
+              onToggle: (index) {
+                setState(() {
+                  StorageRepository.putDouble("isDark", index!.toDouble());
+                  StorageRepository.getDouble("isDark") == 1
+                      ? AdaptiveTheme.of(context).setDark()
+                      : AdaptiveTheme.of(context).setLight();
+                });
+              },
+            ),
             const SizedBox(height: 10),
             Expanded(
               child: Padding(
@@ -63,7 +87,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     const SizedBox(height: 10),
                     Text("Your Playlist",
-                        style: MusicAppTextStyle.w500.copyWith(fontSize: 24)),
+                        style: Theme.of(context).textTheme.headline4),
                     const SizedBox(height: 10),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -95,8 +119,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ],
                     ),
                     const SizedBox(height: 20),
-                    Text("Songs",
-                        style: MusicAppTextStyle.w500.copyWith(fontSize: 24)),
+                    Text("Songs", style: Theme.of(context).textTheme.headline4),
                     const SizedBox(height: 5),
                     ListView.builder(
                       shrinkWrap: true,
@@ -107,16 +130,6 @@ class _HomeScreenState extends State<HomeScreen> {
                             cubitRead.nameSongs[index].split("-");
                         return GestureDetector(
                           onTap: () async {
-                            AwesomeNotifications().createNotification(
-                              content: NotificationContent(
-                                id: 10,
-                                channelKey: 'basic_channel',
-                                title:
-                                    context.read<MusicCubit>().activeSongName,
-                                body: 'Simple body',
-                                actionType: ActionType.Default,
-                              ),
-                            );
                             cubitRead.playMusic(index: index);
                             musicDuraition =
                                 (await cubitRead.player.getDuration())!;
@@ -139,15 +152,13 @@ class _HomeScreenState extends State<HomeScreen> {
                               cubitRead.nameSongs[index]
                                   .split("-")[0]
                                   .toString(),
-                              style: MusicAppTextStyle.w500.copyWith(
-                                  color: MusicAppColor.white, fontSize: 14),
+                              style: Theme.of(context).textTheme.headline5,
                             ),
                             subtitle: Text(
                               subtitle.length > 1
                                   ? subtitle[1].substring(1, subtitle[1].length)
                                   : "Undifined",
-                              style: MusicAppTextStyle.w500.copyWith(
-                                  color: MusicAppColor.grey, fontSize: 12),
+                              style: Theme.of(context).textTheme.headline6,
                             ),
                             trailing: cubitRead.activeSongIndex == index
                                 ? LottieBuilder.asset(
