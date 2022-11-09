@@ -1,4 +1,3 @@
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lottie/lottie.dart';
@@ -10,7 +9,6 @@ Widget visibility({
   required BuildContext context,
   required VoidCallback tapToBottomSheet,
   required VoidCallback tapToPlay,
-  required AudioPlayer player,
 }) {
   return Visibility(
     visible: context.read<MusicCubit>().isShowBottomSheet,

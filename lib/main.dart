@@ -7,15 +7,16 @@ import 'package:music_app/data/shared_preferences.dart';
 import 'package:music_app/ui/router.dart';
 import 'package:music_app/utils/constants.dart';
 import 'package:music_app/utils/theme.dart';
+import 'package:responsive_framework/responsive_framework.dart';
 
 void main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
   await StorageRepository.getInstance();
   final savedThemeMode = await AdaptiveTheme.getThemeMode();
-  runApp(App(
-    savedThemeMode: savedThemeMode,
-  ));
+  runApp(
+    App(savedThemeMode: savedThemeMode),
+  );
 }
 
 class App extends StatelessWidget {
@@ -31,16 +32,23 @@ class App extends StatelessWidget {
         dark: MusicAppTheme.darkMode(),
         initial: AdaptiveThemeMode.light,
         builder: (theme, darkTheme) => MaterialApp(
-          title: 'Adaptive Theme Demo',
-          theme: theme,
-          darkTheme: darkTheme,
-          home: MaterialApp(
-            debugShowCheckedModeBanner: false,
-            title: 'Music App',
-            theme: theme,
-            darkTheme: darkTheme,
-            onGenerateRoute: MusicAppRouters.generateRoutes,
-            initialRoute: homeScreen,
+          home: ResponsiveWrapper.builder(
+            MaterialApp(
+              debugShowCheckedModeBanner: false,
+              title: 'Music App',
+              theme: theme,
+              darkTheme: darkTheme,
+              onGenerateRoute: MusicAppRouters.generateRoutes,
+              initialRoute: homeScreen,
+            ),
+            maxWidth: 1200,
+            minWidth: 480,
+            defaultScale: true,
+            breakpoints: [
+              const ResponsiveBreakpoint.resize(480, name: MOBILE),
+              const ResponsiveBreakpoint.autoScale(800, name: TABLET),
+              const ResponsiveBreakpoint.resize(1000, name: DESKTOP),
+            ],
           ),
         ),
       ),

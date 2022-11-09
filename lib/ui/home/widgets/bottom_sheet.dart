@@ -1,6 +1,8 @@
 // ignore_for_file: use_build_context_synchronously
 
-import 'package:audioplayers/audioplayers.dart';
+import 'dart:developer';
+
+import 'package:assets_audio_player/assets_audio_player.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lottie/lottie.dart';
@@ -12,7 +14,7 @@ import 'package:music_app/utils/text_style.dart';
 bottomsheet({
   required BuildContext context,
   required List<String> nameSongs,
-  required AudioPlayer player,
+  required AssetsAudioPlayer player,
   required Duration musicDuration,
   required Duration currentPosition,
   required int currentMusicIndex,
@@ -23,21 +25,21 @@ bottomsheet({
     builder: (context) {
       return StatefulBuilder(
         builder: (BuildContext context, StateSetter setState) {
-          player.onPositionChanged.listen(
+          player.currentPosition.listen(
             (position) => {
               currentPosition = position,
               setState(() => {}),
             },
           );
-          player.onDurationChanged.listen(
-            (duration) => musicDuration = duration,
+          player.current.listen(
+            (data) =>
+                musicDuration = data?.audio.duration ?? Duration(seconds: 0),
           );
-          player.onPlayerStateChanged.listen((event) {
-            if (event == PlayerState.completed) {
-              context.read<MusicCubit>().changeToNextMusic();
+          player.playerState.listen(
+            (event) {
               setState(() {});
-            }
-          });
+            },
+          );
           return Column(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
@@ -59,7 +61,7 @@ bottomsheet({
                   max: musicDuration.inSeconds.toDouble(),
                   onChanged: (double value) {
                     player.seek(Duration(seconds: value.toInt()));
-                    player.resume();
+                    player.play();
                     currentPosition = Duration(seconds: value.toInt());
                     setState(() => {});
                   },
@@ -74,7 +76,8 @@ bottomsheet({
                     child: IconButton(
                       onPressed: () async {
                         setState(() => {});
-                        context.read<MusicCubit>().changeToPreviousMusic();
+                        await player.stop();
+                        context.read<MusicCubit>().isNext = false;
                       },
                       icon: const Icon(Icons.skip_previous, size: 25),
                     ),
@@ -87,7 +90,7 @@ bottomsheet({
                       onPressed: () async {
                         context.read<MusicCubit>().changeToPlayOrPause();
                         context.read<MusicCubit>().isPlaying
-                            ? await player.resume()
+                            ? await player.play()
                             : await player.pause();
                         setState(() => {});
                       },
@@ -105,7 +108,10 @@ bottomsheet({
                         color: MusicAppColor.white, shape: BoxShape.circle),
                     child: IconButton(
                       onPressed: () async {
-                        context.read<MusicCubit>().changeToNextMusic();
+                        context.read<MusicCubit>().isNext = true;
+
+                        //context.read<MusicCubit>().changeToNextMusic();
+                        await player.stop();
                         setState(() {});
                       },
                       icon: const Icon(

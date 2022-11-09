@@ -1,5 +1,7 @@
+import 'dart:developer';
 import 'dart:io';
-import 'package:audioplayers/audioplayers.dart';
+
+import 'package:assets_audio_player/assets_audio_player.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:music_app/data/shared_preferences.dart';
@@ -8,8 +10,7 @@ part 'music_state.dart';
 
 class MusicCubit extends Cubit<MusicState> {
   MusicCubit() : super(MusicInitial());
-
-  final AudioPlayer player = AudioPlayer();
+  final player = AssetsAudioPlayer();
   bool isPlaying = false;
   bool isShowBottomSheet = false;
   int activeSongIndex = -1;
@@ -20,12 +21,13 @@ class MusicCubit extends Cubit<MusicState> {
   List<FileSystemEntity> files = [];
   int whichPlaylist = -1;
   late Directory dir;
+  bool isNext = false;
 
   void bottomSheetClose() => emit(BottomSheetClosed());
 
   void changeToPlayOrPause() async {
     isPlaying = !isPlaying;
-    isPlaying ? await player.resume() : await player.pause();
+    isPlaying ? await player.play() : await player.pause();
   }
 
   void playMusic({required index}) {
@@ -55,11 +57,36 @@ class MusicCubit extends Cubit<MusicState> {
       String path = entity.path;
       if (path.endsWith('.mp3')) songs.add(entity);
     }
-    player.onPlayerStateChanged.listen((event) {
-      if (event == PlayerState.completed) {
-        isPlaying = false;
-      }
-    });
+  }
+
+  void changeToNextMusicWhenFinished() async {
+    player.playlistAudioFinished.listen(
+      (event) async {
+        if (event.playlist.nextIndex != songs.length) {
+          if (activeSongIndex + 1 == songs.length) {
+            activeSongIndex = 0;
+          } else if (activeSongIndex < songs.length - 1) {
+            activeSongIndex = activeSongIndex + 1;
+          }
+
+          await player.open(
+            Audio.file(
+              songs[activeSongIndex].path,
+              metas: Metas(
+                title: activeSongName,
+                artist: nameSongs[activeSongIndex].split("-").length > 1
+                    ? nameSongs[activeSongIndex].split("-")[1].substring(
+                        1, nameSongs[activeSongIndex].split("-")[1].length)
+                    : "Undifined",
+                album: "CountryAlbum",
+              ),
+            ),
+            showNotification: true,
+          );
+          activeSongName = nameSongs[activeSongIndex].split("-")[0];
+        }
+      },
+    );
   }
 
   void changeToNextMusic() async {
@@ -68,16 +95,42 @@ class MusicCubit extends Cubit<MusicState> {
     } else if (activeSongIndex < songs.length - 1) {
       activeSongIndex = activeSongIndex + 1;
     }
-    await player.stop();
-    await player.play(DeviceFileSource(songs[activeSongIndex].path));
+    await player.open(
+      Audio.file(
+        songs[activeSongIndex].path,
+        metas: Metas(
+          title: activeSongName,
+          artist: nameSongs[activeSongIndex].split("-").length > 1
+              ? nameSongs[activeSongIndex]
+                  .split("-")[1]
+                  .substring(1, nameSongs[activeSongIndex].split("-")[1].length)
+              : "Undifined",
+          album: "CountryAlbum",
+        ),
+      ),
+      showNotification: true,
+    );
     activeSongName = nameSongs[activeSongIndex].split("-")[0];
   }
 
   void changeToPreviousMusic() async {
     var index = activeSongIndex;
     if (index > 0) index = activeSongIndex = activeSongIndex - 1;
-    await player.stop();
-    await player.play(DeviceFileSource(songs[index].path));
+    await player.open(
+      Audio.file(
+        songs[activeSongIndex].path,
+        metas: Metas(
+          title: activeSongName,
+          artist: nameSongs[index].split("-").length > 1
+              ? nameSongs[index]
+                  .split("-")[1]
+                  .substring(1, nameSongs[index].split("-")[1].length)
+              : "Undifined",
+          album: "CountryAlbum",
+        ),
+      ),
+      showNotification: true,
+    );
     activeSongName = nameSongs[index].split("-")[0];
   }
 
@@ -148,6 +201,6 @@ class MusicCubit extends Cubit<MusicState> {
 
   void changeToPlayOrPausePlayList() async {
     isPlaying = !isPlaying;
-    isPlaying ? await player.resume() : await player.pause();
+    isPlaying ? player.play : await player.pause();
   }
 }

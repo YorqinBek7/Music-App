@@ -1,4 +1,5 @@
-import 'package:audioplayers/audioplayers.dart';
+import 'package:assets_audio_player/assets_audio_player.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lottie/lottie.dart';
@@ -72,17 +73,13 @@ class _PlaylistScreenState extends State<PlaylistScreen> {
                           context
                               .read<MusicCubit>()
                               .playMusicInPlayList(index: index);
-                          await cubitRead.player.play(
-                            cubitRead.whichPlaylist == 0
-                                ? DeviceFileSource(
-                                    cubitRead.musicsInfavorites[index])
-                                : DeviceFileSource(
-                                    cubitRead.musicsInOtherSongs[index]),
-                          );
-                          musicDuraition =
-                              (await cubitRead.player.getDuration())!;
-                          currentPosition =
-                              (await cubitRead.player.getCurrentPosition())!;
+
+                          cubitRead.whichPlaylist == 0
+                              ? cubitRead.player.open(Audio.file(
+                                  cubitRead.musicsInfavorites[index]))
+                              : cubitRead.player.open(Audio.file(
+                                  cubitRead.musicsInOtherSongs[index]));
+
                           setState(() {});
                         },
                         child: ListTile(
@@ -129,7 +126,6 @@ class _PlaylistScreenState extends State<PlaylistScreen> {
                 cubitRead.changeToPlayOrPausePlayList();
                 setState(() {});
               },
-              player: cubitRead.player,
             ),
           ],
         ),

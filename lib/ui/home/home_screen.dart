@@ -1,6 +1,8 @@
+// ignore_for_file: use_build_context_synchronously
+import 'dart:developer';
+
 import 'package:adaptive_theme/adaptive_theme.dart';
-import 'package:audioplayers/audioplayers.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:assets_audio_player/assets_audio_player.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
@@ -37,6 +39,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     var cubitRead = context.read<MusicCubit>();
+
     return Scaffold(
       resizeToAvoidBottomInset: false,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -131,13 +134,19 @@ class _HomeScreenState extends State<HomeScreen> {
                         return GestureDetector(
                           onTap: () async {
                             cubitRead.playMusic(index: index);
-                            musicDuraition =
-                                (await cubitRead.player.getDuration())!;
                             currentMusicIndex = index;
-                            currentPosition =
-                                (await cubitRead.player.getCurrentPosition())!;
-                            await cubitRead.player.play(
-                                DeviceFileSource(cubitRead.songs[index].path));
+
+                            List<Audio> audios = [];
+                            for (var element
+                                in context.read<MusicCubit>().songs) {
+                              audios.add(Audio.file(element.path));
+                            }
+                            await context.read<MusicCubit>().player.open(
+                                  Playlist(audios: audios),
+                                  showNotification: true,
+                                );
+                            await cubitRead.player
+                                .playlistPlayAtIndex(currentMusicIndex);
                             setState(() {});
                           },
                           onLongPress: () async {
@@ -190,9 +199,9 @@ class _HomeScreenState extends State<HomeScreen> {
               },
               tapToPlay: () async {
                 cubitRead.changeToPlayOrPause();
+
                 setState(() {});
               },
-              player: cubitRead.player,
             ),
           ],
         ),
@@ -210,6 +219,8 @@ class _HomeScreenState extends State<HomeScreen> {
         .read<MusicCubit>()
         .getMusicsFromStorage(directory: '/storage/emulated/0/Download/');
     context.read<MusicCubit>().getMusicsName();
+    context.read<MusicCubit>().changeToNextMusicWhenFinished();
+
     setState(() {});
   }
 }
