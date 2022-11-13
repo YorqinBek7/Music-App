@@ -1,7 +1,3 @@
-// ignore_for_file: use_build_context_synchronously
-
-import 'dart:developer';
-
 import 'package:assets_audio_player/assets_audio_player.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -32,24 +28,22 @@ bottomsheet({
             },
           );
           player.current.listen(
-            (data) =>
-                musicDuration = data?.audio.duration ?? Duration(seconds: 0),
+            (data) => musicDuration =
+                data?.audio.duration ?? const Duration(seconds: 0),
           );
-          player.playerState.listen(
-            (event) {
-              setState(() {});
-            },
-          );
+
           return Column(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               SizedBox(
-                  width: 200,
-                  height: 200,
-                  child: LottieBuilder.asset(
-                    "assets/lotties/default_music.json",
-                    animate: context.read<MusicCubit>().isPlaying,
-                  )),
+                width: 200,
+                height: 200,
+                child: LottieBuilder.asset(
+                  "assets/lotties/default_music.json",
+                  animate: context.read<MusicCubit>().isPlaying &&
+                      context.read<MusicCubit>().isShowBottomSheet,
+                ),
+              ),
               Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Text(
@@ -76,8 +70,8 @@ bottomsheet({
                     child: IconButton(
                       onPressed: () async {
                         setState(() => {});
-                        await player.stop();
                         context.read<MusicCubit>().isNext = false;
+                        await player.stop();
                       },
                       icon: const Icon(Icons.skip_previous, size: 25),
                     ),
@@ -109,8 +103,6 @@ bottomsheet({
                     child: IconButton(
                       onPressed: () async {
                         context.read<MusicCubit>().isNext = true;
-
-                        //context.read<MusicCubit>().changeToNextMusic();
                         await player.stop();
                         setState(() {});
                       },

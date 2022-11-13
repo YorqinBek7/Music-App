@@ -1,21 +1,16 @@
-// ignore_for_file: use_build_context_synchronously
-import 'dart:developer';
-
-import 'package:adaptive_theme/adaptive_theme.dart';
 import 'package:assets_audio_player/assets_audio_player.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:lottie/lottie.dart';
 import 'package:music_app/cubit/music_cubit.dart';
-import 'package:music_app/data/shared_preferences.dart';
 import 'package:music_app/ui/home/widgets/bottom_sheet.dart';
 import 'package:music_app/ui/home/widgets/on_long_press_dialog.dart';
 import 'package:music_app/ui/home/widgets/playlists.dart';
+import 'package:music_app/ui/home/widgets/theme_button.dart';
 import 'package:music_app/ui/home/widgets/visible_bottom_sheet.dart';
 import 'package:music_app/utils/constants.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:toggle_switch/toggle_switch.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -39,7 +34,6 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     var cubitRead = context.read<MusicCubit>();
-
     return Scaffold(
       resizeToAvoidBottomInset: false,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -55,32 +49,7 @@ class _HomeScreenState extends State<HomeScreen> {
         },
         child: Column(
           children: [
-            ToggleSwitch(
-              minWidth: 90.0,
-              minHeight: 40.0,
-              initialLabelIndex: 0,
-              cornerRadius: 20.0,
-              activeFgColor: Colors.white,
-              inactiveBgColor: Colors.grey,
-              inactiveFgColor: Colors.white,
-              totalSwitches: 2,
-              icons: const [Icons.light_mode, Icons.dark_mode],
-              iconSize: 30.0,
-              activeBgColors: const [
-                [Colors.black45, Colors.black26],
-                [Colors.yellow, Colors.orange]
-              ],
-              animate: true,
-              curve: Curves.bounceInOut,
-              onToggle: (index) {
-                setState(() {
-                  StorageRepository.putDouble("isDark", index!.toDouble());
-                  StorageRepository.getDouble("isDark") == 1
-                      ? AdaptiveTheme.of(context).setDark()
-                      : AdaptiveTheme.of(context).setLight();
-                });
-              },
-            ),
+            const ThemeButton(),
             const SizedBox(height: 10),
             Expanded(
               child: Padding(
@@ -92,34 +61,17 @@ class _HomeScreenState extends State<HomeScreen> {
                     Text("Your Playlist",
                         style: Theme.of(context).textTheme.headline4),
                     const SizedBox(height: 10),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        PlaylistContainers(
-                          title: 'My favorites',
-                          image: 'assets/images/favorite_playlist.png',
-                          onTap: () {
-                            context.read<MusicCubit>().whichPlaylist = 0;
-                            Navigator.pushNamed(
-                              context,
-                              playlistScreen,
-                              arguments: "My Favorites",
-                            );
-                          },
-                        ),
-                        PlaylistContainers(
-                          title: 'Best song 2022',
-                          image: 'assets/images/new_musics.png',
-                          onTap: () {
-                            cubitRead.whichPlaylist = 1;
-                            Navigator.pushNamed(
-                              context,
-                              playlistScreen,
-                              arguments: "Best songs 2022",
-                            );
-                          },
-                        ),
-                      ],
+                    PlaylistContainers(
+                      title: 'My favorites',
+                      image: 'assets/images/favorite_playlist.png',
+                      onTap: () {
+                        cubitRead.isPlayingPlaylist = true;
+                        Navigator.pushNamed(
+                          context,
+                          playlistScreen,
+                          arguments: "My Favorites",
+                        );
+                      },
                     ),
                     const SizedBox(height: 20),
                     Text("Songs", style: Theme.of(context).textTheme.headline4),
@@ -135,18 +87,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           onTap: () async {
                             cubitRead.playMusic(index: index);
                             currentMusicIndex = index;
-
-                            List<Audio> audios = [];
-                            for (var element
-                                in context.read<MusicCubit>().songs) {
-                              audios.add(Audio.file(element.path));
-                            }
-                            await context.read<MusicCubit>().player.open(
-                                  Playlist(audios: audios),
-                                  showNotification: true,
-                                );
-                            await cubitRead.player
-                                .playlistPlayAtIndex(currentMusicIndex);
+                            await playMusic(context, cubitRead);
                             setState(() {});
                           },
                           onLongPress: () async {
@@ -209,6 +150,21 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Future<void> playMusic(BuildContext context, MusicCubit cubitRead) async {
+    List<Audio> audios = [];
+    for (var element in context.read<MusicCubit>().songs) {
+      audios.add(Audio.file(element.path));
+    }
+    await context.read<MusicCubit>().player.open(
+          Playlist(audios: audios),
+          showNotification: true,
+          autoStart: false,
+        );
+    cubitRead.activeSongName =
+        cubitRead.nameSongs[cubitRead.activeSongIndex].split("-")[0];
+    await cubitRead.player.playlistPlayAtIndex(currentMusicIndex);
+  }
+
   void init() async {
     permission = await Permission.storage.request();
     if (permission == PermissionStatus.granted) FlutterNativeSplash.remove();
@@ -220,7 +176,6 @@ class _HomeScreenState extends State<HomeScreen> {
         .getMusicsFromStorage(directory: '/storage/emulated/0/Download/');
     context.read<MusicCubit>().getMusicsName();
     context.read<MusicCubit>().changeToNextMusicWhenFinished();
-
     setState(() {});
   }
 }

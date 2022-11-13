@@ -32,9 +32,9 @@ class App extends StatelessWidget {
         dark: MusicAppTheme.darkMode(),
         initial: AdaptiveThemeMode.light,
         builder: (theme, darkTheme) => MaterialApp(
+          debugShowCheckedModeBanner: false,
           home: ResponsiveWrapper.builder(
             MaterialApp(
-              debugShowCheckedModeBanner: false,
               title: 'Music App',
               theme: theme,
               darkTheme: darkTheme,

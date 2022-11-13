@@ -18,24 +18,18 @@ class PlaylistContainers extends StatelessWidget {
       onTap: onTap,
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 5),
-        width: MediaQuery.of(context).size.width / 2 - 20,
-        padding: const EdgeInsets.all(3),
+        width: double.infinity,
+        padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
             color: MusicAppColor.grey.withOpacity(.5),
             borderRadius: BorderRadius.circular(10)),
         child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             ClipRRect(
                 borderRadius: BorderRadius.circular(10),
                 child: Image.asset(image, width: 70)),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(title, style: MusicAppTextStyle.w500),
-                const SizedBox(height: 5),
-              ],
-            ),
+            Text(title, style: MusicAppTextStyle.w500),
           ],
         ),
       ),

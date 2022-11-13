@@ -53,18 +53,6 @@ Future<dynamic> onLongPressDialog({
                         },
                         child: const Text("Favorites"),
                       ),
-                      TextButton(
-                        onPressed: () async {
-                          Navigator.pop(context);
-                          context
-                              .read<MusicCubit>()
-                              .musicsInOtherSongs
-                              .add(song);
-                          await StorageRepository.putList("songs",
-                              context.read<MusicCubit>().musicsInOtherSongs);
-                        },
-                        child: const Text("Other Songs"),
-                      )
                     ],
                   ),
                 ),

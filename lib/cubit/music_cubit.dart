@@ -1,6 +1,4 @@
-import 'dart:developer';
 import 'dart:io';
-
 import 'package:assets_audio_player/assets_audio_player.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -19,9 +17,9 @@ class MusicCubit extends Cubit<MusicState> {
   List<FileSystemEntity> songs = [];
   List<String> nameSongs = [];
   List<FileSystemEntity> files = [];
-  int whichPlaylist = -1;
   late Directory dir;
   bool isNext = false;
+  bool isPlayingPlaylist = false;
 
   void bottomSheetClose() => emit(BottomSheetClosed());
 
@@ -62,28 +60,72 @@ class MusicCubit extends Cubit<MusicState> {
   void changeToNextMusicWhenFinished() async {
     player.playlistAudioFinished.listen(
       (event) async {
-        if (event.playlist.nextIndex != songs.length) {
-          if (activeSongIndex + 1 == songs.length) {
-            activeSongIndex = 0;
-          } else if (activeSongIndex < songs.length - 1) {
-            activeSongIndex = activeSongIndex + 1;
-          }
-
-          await player.open(
-            Audio.file(
-              songs[activeSongIndex].path,
-              metas: Metas(
-                title: activeSongName,
-                artist: nameSongs[activeSongIndex].split("-").length > 1
-                    ? nameSongs[activeSongIndex].split("-")[1].substring(
-                        1, nameSongs[activeSongIndex].split("-")[1].length)
-                    : "Undifined",
-                album: "CountryAlbum",
+        if (isNext && isPlayingPlaylist == false) {
+          if (event.playlist.nextIndex != songs.length) {
+            if (activeSongIndex + 1 == songs.length) {
+              activeSongIndex = 0;
+            } else if (activeSongIndex < songs.length - 1) {
+              activeSongIndex = activeSongIndex + 1;
+            }
+            await player.stop();
+            activeSongName = nameSongs[activeSongIndex].split("-")[0];
+            await player.open(
+              Audio.file(
+                songs[activeSongIndex].path,
+                metas: Metas(
+                  title: activeSongName,
+                  artist: nameSongs[activeSongIndex].split("-").length > 1
+                      ? nameSongs[activeSongIndex].split("-")[1].substring(
+                          1, nameSongs[activeSongIndex].split("-")[1].length)
+                      : "Undifined",
+                ),
               ),
-            ),
-            showNotification: true,
-          );
-          activeSongName = nameSongs[activeSongIndex].split("-")[0];
+              showNotification: true,
+              notificationSettings: NotificationSettings(
+                customNextAction: (player) async {
+                  await player.stop();
+                },
+                customPrevAction: (player) async {
+                  await player.stop();
+                },
+              ),
+            );
+            activeSongName = nameSongs[activeSongIndex].split("-")[0];
+          }
+        } else if (!isNext && isPlayingPlaylist == false) {
+          changeToPreviousMusic();
+        } else if (isPlayingPlaylist) {
+          if (event.playlist.nextIndex != musicsInfavorites.length) {
+            if (activeSongIndex + 1 == musicsInfavorites.length) {
+              activeSongIndex = 0;
+            } else if (activeSongIndex < musicsInfavorites.length - 1) {
+              activeSongIndex = activeSongIndex + 1;
+            }
+            await player.stop();
+            activeSongName = nameSongs[activeSongIndex].split("-")[0];
+            await player.open(
+              Audio.file(
+                musicsInfavorites[activeSongIndex],
+                metas: Metas(
+                  title: activeSongName,
+                  artist: nameSongs[activeSongIndex].split("-").length > 1
+                      ? nameSongs[activeSongIndex].split("-")[1].substring(
+                          1, nameSongs[activeSongIndex].split("-")[1].length)
+                      : "Undifined",
+                ),
+              ),
+              showNotification: true,
+              notificationSettings: NotificationSettings(
+                customNextAction: (player) async {
+                  await player.stop();
+                },
+                customPrevAction: (player) async {
+                  await player.stop();
+                },
+              ),
+            );
+            activeSongName = nameSongs[activeSongIndex].split("-")[0];
+          }
         }
       },
     );
@@ -109,6 +151,14 @@ class MusicCubit extends Cubit<MusicState> {
         ),
       ),
       showNotification: true,
+      notificationSettings: NotificationSettings(
+        customNextAction: (player) async {
+          await player.stop();
+        },
+        customPrevAction: (player) async {
+          await player.stop();
+        },
+      ),
     );
     activeSongName = nameSongs[activeSongIndex].split("-")[0];
   }
@@ -137,59 +187,34 @@ class MusicCubit extends Cubit<MusicState> {
   //////////////////////////// PlayList Screen ///////////////////////////////////////
 
   List<String> musicsInfavorites = [];
-  List<String> musicsInOtherSongs = [];
+
   List<String> songsNameInPlayList = [];
 
   void readFromStorage() async {
-    musicsInfavorites = whichPlaylist == 0
-        ? StorageRepository.getList("favorites")
-        : StorageRepository.getList("songs");
+    musicsInfavorites = StorageRepository.getList("favorites");
   }
 
   void getMusicsFromPlaylists() {
-    if (whichPlaylist == 0) {
-      for (var i = 0; i < musicsInfavorites.length; i++) {
-        for (var j = musicsInfavorites[i].length - 1; j >= 0; j--) {
-          if (musicsInfavorites[i][j] == "/") {
-            slashIndexOfName = j;
-            break;
-          }
-        }
-      }
-    } else if (whichPlaylist == 1) {
-      for (var i = 0; i < musicsInOtherSongs.length; i++) {
-        for (var j = musicsInOtherSongs[i].length - 1; j >= 0; j--) {
-          if (musicsInOtherSongs[i][j] == "/") {
-            slashIndexOfName = j;
-            break;
-          }
+    for (var i = 0; i < musicsInfavorites.length; i++) {
+      for (var j = musicsInfavorites[i].length - 1; j >= 0; j--) {
+        if (musicsInfavorites[i][j] == "/") {
+          slashIndexOfName = j;
+          break;
         }
       }
     }
   }
 
   void addMusicsNameInPlaylist() async {
-    if (whichPlaylist == 0) {
-      List<String> musics = [];
-      songsNameInPlayList = [];
-      musics = StorageRepository.getList("favorites");
-      for (var i = 0; i < musicsInfavorites.length; i++) {
-        songsNameInPlayList
-            .add(musics[i].substring(slashIndexOfName + 1, musics[i].length));
-      }
-      var set = songsNameInPlayList.toSet();
-      songsNameInPlayList = set.toList();
-    } else if (whichPlaylist == 1) {
-      List<String> musics = [];
-      songsNameInPlayList = [];
-      musics = StorageRepository.getList("songs");
-      for (var i = 0; i < musicsInOtherSongs.length; i++) {
-        songsNameInPlayList
-            .add(musics[i].substring(slashIndexOfName + 1, musics[i].length));
-      }
-      var set = songsNameInPlayList.toSet();
-      songsNameInPlayList = set.toList();
+    List<String> musics = [];
+    songsNameInPlayList = [];
+    musics = StorageRepository.getList("favorites");
+    for (var i = 0; i < musicsInfavorites.length; i++) {
+      songsNameInPlayList
+          .add(musics[i].substring(slashIndexOfName + 1, musics[i].length));
     }
+    var set = songsNameInPlayList.toSet();
+    songsNameInPlayList = set.toList();
   }
 
   void playMusicInPlayList({required index}) {
@@ -201,6 +226,6 @@ class MusicCubit extends Cubit<MusicState> {
 
   void changeToPlayOrPausePlayList() async {
     isPlaying = !isPlaying;
-    isPlaying ? player.play : await player.pause();
+    isPlaying ? player.play() : await player.pause();
   }
 }

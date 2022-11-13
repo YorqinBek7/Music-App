@@ -10,7 +10,6 @@ class MusicAppRouters {
         return MaterialPageRoute(
           builder: (context) => const HomeScreen(),
         );
-
       case playlistScreen:
         final args = settings.arguments;
         return MaterialPageRoute(
