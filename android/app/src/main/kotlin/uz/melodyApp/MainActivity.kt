@@ -1,4 +1,4 @@
-package uz.music_app
+package uz.melodyApp
 
 import io.flutter.embedding.android.FlutterActivity
 

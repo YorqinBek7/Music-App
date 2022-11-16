@@ -12,28 +12,34 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-
-  cupertino_icons: ^1.0.2
-  file_manager: ^1.0.1
-  path_provider: ^2.0.11
-  permission_handler: ^10.2.0
+    
+#UI
   modal_bottom_sheet: ^2.1.2
-  lottie: ^1.4.3
-  get_storage: ^2.0.3
-  flutter_bloc: ^8.1.1
   flutter_native_splash: ^2.2.13
-  shared_preferences: ^2.0.15
-  change_app_package_name: ^1.1.0
   adaptive_theme: ^3.1.1
   toggle_switch: ^2.0.1
   responsive_framework: ^0.2.0
+  cupertino_icons: ^1.0.2
+  lottie: ^1.4.3
+
+#FILE
+  file_manager: ^1.0.1
+  path_provider: ^2.0.11
+
+#STORAGE
+  shared_preferences: ^2.0.15
+  get_storage: ^2.0.3
+  
+#OTHER
   assets_audio_player: ^3.0.5
+  permission_handler: ^10.2.0
+  flutter_bloc: ^8.1.1
+  change_app_package_name: ^1.1.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_launcher_icons: "^0.10.0"
-
   flutter_lints: ^2.0.0
 
 flutter:
