@@ -31,12 +31,14 @@ class _ThemeButtonState extends State<ThemeButton> {
       animate: true,
       curve: Curves.bounceInOut,
       onToggle: (index) {
-        setState(() {
-          StorageRepository.putDouble("isDark", index!.toDouble());
-          StorageRepository.getDouble("isDark") == 1
-              ? AdaptiveTheme.of(context).setDark()
-              : AdaptiveTheme.of(context).setLight();
-        });
+        if (mounted) {
+          setState(() {
+            StorageRepository.putDouble("isDark", index!.toDouble());
+            StorageRepository.getDouble("isDark") == 1
+                ? AdaptiveTheme.of(context).setDark()
+                : AdaptiveTheme.of(context).setLight();
+          });
+        }
       },
     );
   }

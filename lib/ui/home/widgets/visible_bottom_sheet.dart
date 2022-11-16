@@ -29,8 +29,11 @@ Widget visibility({
             animate: context.read<MusicCubit>().isPlaying,
             width: 75,
           ),
-          Text(context.watch<MusicCubit>().activeSongName,
-              style: MusicAppTextStyle.w700.copyWith(fontSize: 16)),
+          Expanded(
+            flex: 10,
+            child: Text(context.watch<MusicCubit>().activeSongName,
+                style: MusicAppTextStyle.w700.copyWith(fontSize: 16)),
+          ),
           const Spacer(),
           IconButton(
             onPressed: tapToPlay,

@@ -5,4 +5,4 @@ abstract class MusicState {}
 
 class MusicInitial extends MusicState {}
 
-class BottomSheetClosed extends MusicState {}
+class BottomSheetClosedState extends MusicState {}

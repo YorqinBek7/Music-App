@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lottie/lottie.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
+
 import 'package:music_app/cubit/music_cubit.dart';
 import 'package:music_app/utils/color.dart';
 import 'package:music_app/utils/text_style.dart';
@@ -13,18 +14,19 @@ bottomsheet({
   required AssetsAudioPlayer player,
   required Duration musicDuration,
   required Duration currentPosition,
-  required int currentMusicIndex,
+  isClosed = false,
 }) async {
   showMaterialModalBottomSheet(
     backgroundColor: MusicAppColor.C_536987,
     context: context,
     builder: (context) {
+      var cubitRead = context.read<MusicCubit>();
       return StatefulBuilder(
         builder: (BuildContext context, StateSetter setState) {
           player.currentPosition.listen(
             (position) => {
               currentPosition = position,
-              setState(() => {}),
+              if (!isClosed) setState(() => {}),
             },
           );
           player.current.listen(
@@ -40,16 +42,27 @@ bottomsheet({
                 height: 200,
                 child: LottieBuilder.asset(
                   "assets/lotties/default_music.json",
-                  animate: context.read<MusicCubit>().isPlaying &&
-                      context.read<MusicCubit>().isShowBottomSheet,
+                  animate: cubitRead.isPlaying,
                 ),
               ),
               Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: Text(
-                  nameSongs[context.read<MusicCubit>().activeSongIndex],
-                  style: MusicAppTextStyle.w500,
-                ),
+                child: cubitRead.isPlayingFromPlaylist
+                    ? Text(
+                        cubitRead.songsNameInPlayList[
+                            cubitRead.activePlaylistSongIndex <
+                                    cubitRead.songsNameInPlayList.length
+                                ? cubitRead.activePlaylistSongIndex
+                                : 0],
+                        style: MusicAppTextStyle.w500,
+                      )
+                    : Text(
+                        nameSongs[cubitRead.activeSongIndex <
+                                cubitRead.nameSongs.length
+                            ? cubitRead.activeSongIndex
+                            : 0],
+                        style: MusicAppTextStyle.w500,
+                      ),
               ),
               Slider(
                   max: musicDuration.inSeconds.toDouble(),
@@ -69,9 +82,33 @@ bottomsheet({
                         color: MusicAppColor.white, shape: BoxShape.circle),
                     child: IconButton(
                       onPressed: () async {
+                        player.previous();
+                        cubitRead.isPlaying = true;
+                        if (cubitRead.isPlayingFromPlaylist) {
+                          if (cubitRead.activePlaylistSongIndex > 0) {
+                            cubitRead.activePlaylistSongIndex--;
+                            cubitRead.activeSongName =
+                                cubitRead.songsNameInPlayList[
+                                    cubitRead.activePlaylistSongIndex];
+                          }
+                          cubitRead.player.updateCurrentAudioNotification(
+                            metas: Metas(
+                              title: cubitRead.activeSongName,
+                            ),
+                          );
+                        } else {
+                          if (cubitRead.activeSongIndex > 0) {
+                            cubitRead.activeSongIndex--;
+                            cubitRead.activeSongName =
+                                cubitRead.nameSongs[cubitRead.activeSongIndex];
+                          }
+                          cubitRead.player.updateCurrentAudioNotification(
+                            metas: Metas(
+                              title: cubitRead.activeSongName,
+                            ),
+                          );
+                        }
                         setState(() => {});
-                        context.read<MusicCubit>().isNext = false;
-                        await player.stop();
                       },
                       icon: const Icon(Icons.skip_previous, size: 25),
                     ),
@@ -82,8 +119,8 @@ bottomsheet({
                         color: MusicAppColor.white, shape: BoxShape.circle),
                     child: IconButton(
                       onPressed: () async {
-                        context.read<MusicCubit>().changeToPlayOrPause();
-                        context.read<MusicCubit>().isPlaying
+                        cubitRead.changeToPlayOrPause();
+                        cubitRead.isPlaying
                             ? await player.play()
                             : await player.pause();
                         setState(() => {});
@@ -102,8 +139,34 @@ bottomsheet({
                         color: MusicAppColor.white, shape: BoxShape.circle),
                     child: IconButton(
                       onPressed: () async {
-                        context.read<MusicCubit>().isNext = true;
-                        await player.stop();
+                        await player.next();
+                        cubitRead.isPlaying = true;
+                        if (cubitRead.isPlayingFromPlaylist) {
+                          if (cubitRead.activePlaylistSongIndex <
+                              cubitRead.songsNameInPlayList.length) {
+                            cubitRead.activePlaylistSongIndex++;
+                            cubitRead.activeSongName =
+                                cubitRead.songsNameInPlayList[
+                                    cubitRead.activePlaylistSongIndex];
+                          }
+                          cubitRead.player.updateCurrentAudioNotification(
+                            metas: Metas(
+                              title: cubitRead.activeSongName,
+                            ),
+                          );
+                        } else {
+                          if (cubitRead.activeSongIndex < nameSongs.length) {
+                            cubitRead.activeSongIndex++;
+                            cubitRead.activeSongName =
+                                nameSongs[cubitRead.activeSongIndex];
+                          }
+                          cubitRead.player.updateCurrentAudioNotification(
+                            metas: Metas(
+                              title: cubitRead.activeSongName,
+                            ),
+                          );
+                        }
+
                         setState(() {});
                       },
                       icon: const Icon(
@@ -120,6 +183,7 @@ bottomsheet({
       );
     },
   ).whenComplete(() {
+    isClosed = true;
     context.read<MusicCubit>().bottomSheetClose();
   });
 }
