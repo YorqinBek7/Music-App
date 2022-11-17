@@ -66,9 +66,9 @@ bottomsheet({
               ),
               Slider(
                   max: musicDuration.inSeconds.toDouble(),
-                  onChanged: (double value) {
-                    player.seek(Duration(seconds: value.toInt()));
-                    player.play();
+                  onChanged: (double value) async {
+                    await player.seek(Duration(seconds: value.toInt()));
+                    await player.play();
                     currentPosition = Duration(seconds: value.toInt());
                     setState(() => {});
                   },
@@ -82,7 +82,7 @@ bottomsheet({
                         color: MusicAppColor.white, shape: BoxShape.circle),
                     child: IconButton(
                       onPressed: () async {
-                        player.previous();
+                        await player.previous();
                         cubitRead.isPlaying = true;
                         if (cubitRead.isPlayingFromPlaylist) {
                           if (cubitRead.activePlaylistSongIndex > 0) {
@@ -120,9 +120,6 @@ bottomsheet({
                     child: IconButton(
                       onPressed: () async {
                         cubitRead.changeToPlayOrPause();
-                        cubitRead.isPlaying
-                            ? await player.play()
-                            : await player.pause();
                         setState(() => {});
                       },
                       icon: Icon(
@@ -152,6 +149,10 @@ bottomsheet({
                           cubitRead.player.updateCurrentAudioNotification(
                             metas: Metas(
                               title: cubitRead.activeSongName,
+                              image: const MetasImage(
+                                path: "assets/images/app_icon.png",
+                                type: ImageType.asset,
+                              ),
                             ),
                           );
                         } else {
@@ -163,6 +164,10 @@ bottomsheet({
                           cubitRead.player.updateCurrentAudioNotification(
                             metas: Metas(
                               title: cubitRead.activeSongName,
+                              image: const MetasImage(
+                                path: "assets/images/app_icon.png",
+                                type: ImageType.asset,
+                              ),
                             ),
                           );
                         }

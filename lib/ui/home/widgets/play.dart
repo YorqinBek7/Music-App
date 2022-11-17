@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:assets_audio_player/assets_audio_player.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -11,15 +13,18 @@ Future<void> playMusic(
     required List<String> songsName,
     required int index,
     required StateSetter setter}) async {
-  cubitRead.isPlayingFromPlaylist = isPlayingFromPlaylist;
   cubitRead.playMusic(index: index);
   List<Audio> audios = [];
   for (var element in songs) {
     audios.add(
       Audio.file(
-        !isPlayingFromPlaylist ? element.path : element,
+        !cubitRead.isPlayingFromPlaylist ? element.path : element,
         metas: Metas(
           title: cubitRead.activeSongName,
+          image: const MetasImage(
+            path: "assets/images/app_icon.png",
+            type: ImageType.asset,
+          ),
         ),
       ),
     );
@@ -30,61 +35,83 @@ Future<void> playMusic(
         showNotification: true,
         autoStart: false,
         notificationSettings: NotificationSettings(
-          customNextAction: (player) {
+          customPlayPauseAction: (player) => {
+            cubitRead.changeToPlayOrPause(),
+            setter(
+              () => {},
+            )
+          },
+          customNextAction: (player) async {
             if (cubitRead.isPlayingFromPlaylist) {
               if (cubitRead.activePlaylistSongIndex <
                   cubitRead.songsNameInPlayList.length) {
                 cubitRead.activePlaylistSongIndex++;
                 cubitRead.activeSongName = cubitRead
                     .songsNameInPlayList[cubitRead.activePlaylistSongIndex];
+                await cubitRead.player.updateCurrentAudioNotification(
+                  metas: Metas(
+                    title: cubitRead.activeSongName,
+                    image: const MetasImage(
+                      path: "assets/images/app_icon.png",
+                      type: ImageType.asset,
+                    ),
+                  ),
+                );
               }
-              cubitRead.player.updateCurrentAudioNotification(
-                metas: Metas(
-                  title: cubitRead.activeSongName,
-                ),
-              );
             } else {
               if (cubitRead.activeSongIndex < cubitRead.nameSongs.length) {
                 cubitRead.activeSongIndex++;
                 cubitRead.activeSongName =
                     cubitRead.nameSongs[cubitRead.activeSongIndex];
               }
-              cubitRead.player.updateCurrentAudioNotification(
+              await cubitRead.player.updateCurrentAudioNotification(
                 metas: Metas(
                   title: cubitRead.activeSongName,
+                  image: const MetasImage(
+                    path: "assets/images/app_icon.png",
+                    type: ImageType.asset,
+                  ),
                 ),
               );
             }
-            player.next();
+            await cubitRead.player.next();
             setter(
               () => {},
             );
           },
-          customPrevAction: (player) {
+          customPrevAction: (player) async {
             if (cubitRead.isPlayingFromPlaylist) {
               if (cubitRead.activePlaylistSongIndex > 0) {
                 cubitRead.activePlaylistSongIndex--;
                 cubitRead.activeSongName = cubitRead
                     .songsNameInPlayList[cubitRead.activePlaylistSongIndex];
+                await player.updateCurrentAudioNotification(
+                  metas: Metas(
+                    title: cubitRead.activeSongName,
+                    image: const MetasImage(
+                      path: "assets/images/app_icon.png",
+                      type: ImageType.asset,
+                    ),
+                  ),
+                );
               }
-              cubitRead.player.updateCurrentAudioNotification(
-                metas: Metas(
-                  title: cubitRead.activeSongName,
-                ),
-              );
             } else {
               if (cubitRead.activeSongIndex > 0) {
                 cubitRead.activeSongIndex--;
                 cubitRead.activeSongName =
                     cubitRead.nameSongs[cubitRead.activeSongIndex];
+                cubitRead.player.updateCurrentAudioNotification(
+                  metas: Metas(
+                    title: cubitRead.activeSongName,
+                    image: const MetasImage(
+                      path: "assets/images/app_icon.png",
+                      type: ImageType.asset,
+                    ),
+                  ),
+                );
               }
-              cubitRead.player.updateCurrentAudioNotification(
-                metas: Metas(
-                  title: cubitRead.activeSongName,
-                ),
-              );
             }
-            player.previous();
+            await cubitRead.player.previous();
             setter(
               () => {},
             );

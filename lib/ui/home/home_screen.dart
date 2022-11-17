@@ -40,7 +40,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         centerTitle: true,
-        title: Text("Music App", style: Theme.of(context).textTheme.headline4),
+        title: Text("MelodyApp", style: Theme.of(context).textTheme.headline4),
         backgroundColor: Theme.of(context).backgroundColor,
         elevation: 0,
       ),
@@ -96,116 +96,130 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         Text("Songs",
                             style: Theme.of(context).textTheme.headline4),
                         const SizedBox(height: 5),
-                        ListView.builder(
-                          shrinkWrap: true,
-                          physics: const BouncingScrollPhysics(),
-                          itemCount: cubitRead.songs.length,
-                          itemBuilder: (context, index) {
-                            List<String> subtitle =
-                                cubitRead.nameSongs[index].split("-");
-                            return GestureDetector(
-                              onTap: () async {
-                                cubitRead.isPlayingFromPlaylist = false;
-                                await playMusic(
-                                  context: context,
-                                  cubitRead: cubitRead,
-                                  isPlayingFromPlaylist: false,
-                                  songsName: cubitRead.nameSongs,
-                                  songs: cubitRead.songs,
-                                  index: index,
-                                  setter: (void Function() fn) {
-                                    setState(() {});
-                                  },
-                                );
-                                setState(() {});
-                              },
-                              onLongPress: () async {
-                                onLongPressDialog(
-                                  context: context,
-                                  song: cubitRead.songs[index].path,
-                                  indexSelectedMusic: index,
-                                );
-                              },
-                              child: ListTile(
-                                title: Text(
-                                  cubitRead.nameSongs[index]
-                                      .split("-")[0]
-                                      .toString(),
-                                  style: Theme.of(context).textTheme.headline5,
-                                ),
-                                subtitle: Text(
-                                  subtitle.length > 1
-                                      ? subtitle[1]
-                                          .substring(1, subtitle[1].length)
-                                      : "Undifined",
-                                  style: Theme.of(context).textTheme.headline6,
-                                ),
-                                trailing: cubitRead.activeSongIndex == index
-                                    ? LottieBuilder.asset(
-                                        "assets/lotties/default_music.json",
-                                        width: 20,
-                                        animate: context
-                                            .read<MusicCubit>()
-                                            .isPlaying)
-                                    : const SizedBox(),
+                        cubitRead.songs.isEmpty
+                            ? LottieBuilder.asset("assets/lotties/nodata.json")
+                            : ListView.builder(
+                                shrinkWrap: true,
+                                physics: const BouncingScrollPhysics(),
+                                itemCount: cubitRead.songs.length,
+                                itemBuilder: (context, index) {
+                                  List<String> subtitle =
+                                      cubitRead.nameSongs[index].split("-");
+                                  return GestureDetector(
+                                    onTap: () async {
+                                      cubitRead.isPlayingFromPlaylist = false;
+                                      await playMusic(
+                                        context: context,
+                                        cubitRead: cubitRead,
+                                        isPlayingFromPlaylist: false,
+                                        songsName: cubitRead.nameSongs,
+                                        songs: cubitRead.songs,
+                                        index: index,
+                                        setter: (void Function() fn) {
+                                          setState(() {});
+                                        },
+                                      );
+                                      setState(() {});
+                                    },
+                                    onLongPress: () async {
+                                      onLongPressDialog(
+                                        context: context,
+                                        song: cubitRead.songs[index].path,
+                                        indexSelectedMusic: index,
+                                      );
+                                    },
+                                    child: ListTile(
+                                      title: Text(
+                                        cubitRead.nameSongs[index]
+                                            .split("-")[0]
+                                            .toString(),
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .headline5,
+                                      ),
+                                      subtitle: Text(
+                                        subtitle.length > 1
+                                            ? subtitle[1].substring(
+                                                1, subtitle[1].length)
+                                            : "Undifined",
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .headline6,
+                                      ),
+                                      trailing: cubitRead.activeSongIndex ==
+                                              index
+                                          ? LottieBuilder.asset(
+                                              "assets/lotties/default_music.json",
+                                              width: 20,
+                                              animate: context
+                                                  .read<MusicCubit>()
+                                                  .isPlaying)
+                                          : const SizedBox(),
+                                    ),
+                                  );
+                                },
                               ),
-                            );
-                          },
-                        ),
                       ],
                     ),
                   ),
                   Column(
                     children: [
                       Expanded(
-                        child: ListView.builder(
-                          itemCount: cubitRead.songsNameInPlayList.length,
-                          itemBuilder: (context, index) {
-                            return GestureDetector(
-                              onTap: () async {
-                                cubitRead.isPlayingFromPlaylist = true;
-                                await playMusic(
-                                  context: context,
-                                  cubitRead: cubitRead,
-                                  isPlayingFromPlaylist: true,
-                                  songs: cubitRead.musicsInfavorites,
-                                  songsName: cubitRead.songsNameInPlayList,
-                                  index: index,
-                                  setter: (void Function() fn) {},
-                                );
-                                setState(() {});
-                              },
-                              child: ListTile(
-                                title: Text(
-                                  cubitRead.songsNameInPlayList[index]
-                                      .split("-")[0]
-                                      .toString(),
-                                  style: Theme.of(context).textTheme.headline5,
-                                ),
-                                subtitle: Text(
-                                  cubitRead.songsNameInPlayList[index]
-                                              .split("-")
-                                              .length >
-                                          1
-                                      ? cubitRead.songsNameInPlayList[index]
-                                          .split("-")[1]
-                                      : "Undifined",
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .headline6
-                                      ?.copyWith(fontSize: 14),
-                                ),
-                                trailing:
-                                    cubitRead.activePlaylistSongIndex == index
-                                        ? LottieBuilder.asset(
-                                            "assets/lotties/default_music.json",
-                                            width: 30,
-                                          )
-                                        : const SizedBox(),
+                        child: cubitRead.songsNameInPlayList.isEmpty
+                            ? LottieBuilder.asset("assets/lotties/nodata.json")
+                            : ListView.builder(
+                                itemCount: cubitRead.songsNameInPlayList.length,
+                                itemBuilder: (context, index) {
+                                  return GestureDetector(
+                                    onTap: () async {
+                                      cubitRead.isPlayingFromPlaylist = true;
+                                      await playMusic(
+                                        context: context,
+                                        cubitRead: cubitRead,
+                                        isPlayingFromPlaylist: true,
+                                        songs: cubitRead.musicsInfavorites,
+                                        songsName:
+                                            cubitRead.songsNameInPlayList,
+                                        index: index,
+                                        setter: (void Function() fn) {},
+                                      );
+                                      setState(() {});
+                                    },
+                                    child: ListTile(
+                                      title: Text(
+                                        cubitRead.songsNameInPlayList[index]
+                                            .split("-")[0]
+                                            .toString(),
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .headline5,
+                                      ),
+                                      subtitle: Text(
+                                        cubitRead.songsNameInPlayList[index]
+                                                    .split("-")
+                                                    .length >
+                                                1
+                                            ? cubitRead
+                                                .songsNameInPlayList[index]
+                                                .split("-")[1]
+                                            : "Undifined",
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .headline6
+                                            ?.copyWith(fontSize: 14),
+                                      ),
+                                      trailing:
+                                          cubitRead.activePlaylistSongIndex ==
+                                                  index
+                                              ? LottieBuilder.asset(
+                                                  "assets/lotties/default_music.json",
+                                                  width: 30,
+                                                )
+                                              : const SizedBox(),
+                                    ),
+                                  );
+                                },
                               ),
-                            );
-                          },
-                        ),
                       ),
                     ],
                   )
