@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
@@ -43,7 +41,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         centerTitle: true,
-        title: Text("MelodyApp", style: Theme.of(context).textTheme.headline4),
+        title: Text("Melody App", style: Theme.of(context).textTheme.headline4),
         backgroundColor: Theme.of(context).backgroundColor,
         elevation: 0,
       ),

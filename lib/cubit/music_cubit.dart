@@ -1,4 +1,3 @@
-import 'dart:developer';
 import 'dart:io';
 import 'package:assets_audio_player/assets_audio_player.dart';
 import 'package:flutter/cupertino.dart';
@@ -29,10 +28,11 @@ class MusicCubit extends Cubit<MusicState> {
     player.playlistAudioFinished.listen(
       (event) {
         if (isPlayingFromPlaylist) {
-          if (activePlaylistSongIndex < songsNameInPlayList.length - 1) {
-            activePlaylistSongIndex++;
-            activeSongName = songsNameInPlayList[activePlaylistSongIndex];
+          activePlaylistSongIndex++;
+          if (activePlaylistSongIndex > songsNameInPlayList.length - 1) {
+            activePlaylistSongIndex = 0;
           }
+          activeSongName = songsNameInPlayList[activePlaylistSongIndex];
           player.updateCurrentAudioNotification(
             metas: Metas(
               title: activeSongName,
@@ -42,10 +42,9 @@ class MusicCubit extends Cubit<MusicState> {
             () => {},
           );
         } else {
-          if (activeSongIndex < nameSongs.length - 1) {
-            activeSongIndex++;
-            activeSongName = nameSongs[activeSongIndex];
-          }
+          activeSongIndex++;
+          if (activeSongIndex > nameSongs.length - 1) activeSongIndex = 0;
+          activeSongName = nameSongs[activeSongIndex];
           player.updateCurrentAudioNotification(
             metas: Metas(
               title: activeSongName,
