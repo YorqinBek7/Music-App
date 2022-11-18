@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
@@ -29,6 +31,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     init();
     controller = TabController(length: 2, vsync: this);
     tabController = TabController(length: 2, vsync: this);
+
     super.initState();
   }
 
@@ -73,7 +76,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       .copyWith(fontSize: 25),
                 ),
                 Text(
-                  "Playlist",
+                  "Favorites",
                   style: Theme.of(context)
                       .textTheme
                       .headline5!
@@ -87,6 +90,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 physics: const NeverScrollableScrollPhysics(),
                 controller: controller,
                 children: [
+                  // All Songs
                   Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: ListView(
@@ -107,6 +111,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                       cubitRead.nameSongs[index].split("-");
                                   return GestureDetector(
                                     onTap: () async {
+                                      cubitRead.listenMusicFinish((fn) {
+                                        setState(() {});
+                                      });
                                       cubitRead.isPlayingFromPlaylist = false;
                                       await playMusic(
                                         context: context,
@@ -162,6 +169,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       ],
                     ),
                   ),
+                  // Playlist
                   Column(
                     children: [
                       Expanded(
@@ -172,6 +180,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 itemBuilder: (context, index) {
                                   return GestureDetector(
                                     onTap: () async {
+                                      cubitRead.listenMusicFinish((fn) {
+                                        setState(() {});
+                                      });
+
                                       cubitRead.isPlayingFromPlaylist = true;
                                       await playMusic(
                                         context: context,
@@ -264,6 +276,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     context.read<MusicCubit>().readFromStorage();
     context.read<MusicCubit>().getMusicsFromPlaylists();
     context.read<MusicCubit>().addMusicsNameInPlaylist();
+    context.read<MusicCubit>().whenAllSongsEnded((fn) {
+      setState(() {});
+    });
     setState(() {});
   }
 }

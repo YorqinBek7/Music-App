@@ -31,7 +31,7 @@ Widget visibility({
           ),
           Expanded(
             flex: 10,
-            child: Text(context.watch<MusicCubit>().activeSongName,
+            child: Text(context.read<MusicCubit>().activeSongName,
                 style: MusicAppTextStyle.w700.copyWith(fontSize: 16)),
           ),
           const Spacer(),

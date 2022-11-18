@@ -1,6 +1,8 @@
+import 'dart:developer';
 import 'dart:io';
 import 'package:assets_audio_player/assets_audio_player.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:music_app/data/shared_preferences.dart';
 
@@ -22,6 +24,62 @@ class MusicCubit extends Cubit<MusicState> {
   late Directory dir;
 
   void bottomSheetClose() => emit(BottomSheetClosedState());
+
+  void listenMusicFinish(StateSetter setter) {
+    player.playlistAudioFinished.listen(
+      (event) {
+        if (isPlayingFromPlaylist) {
+          if (activePlaylistSongIndex < songsNameInPlayList.length - 1) {
+            activePlaylistSongIndex++;
+            activeSongName = songsNameInPlayList[activePlaylistSongIndex];
+          }
+          player.updateCurrentAudioNotification(
+            metas: Metas(
+              title: activeSongName,
+            ),
+          );
+          setter(
+            () => {},
+          );
+        } else {
+          if (activeSongIndex < nameSongs.length - 1) {
+            activeSongIndex++;
+            activeSongName = nameSongs[activeSongIndex];
+          }
+          player.updateCurrentAudioNotification(
+            metas: Metas(
+              title: activeSongName,
+            ),
+          );
+          setter(
+            () => {},
+          );
+        }
+      },
+    );
+  }
+
+  void whenAllSongsEnded(StateSetter setter) {
+    player.playlistFinished.listen((event) {
+      if (event) {
+        if (isPlayingFromPlaylist) {
+          activePlaylistSongIndex = 0;
+          isPlaying = false;
+          activeSongName = songsNameInPlayList[activePlaylistSongIndex];
+          setter(
+            () => {},
+          );
+        } else {
+          activeSongIndex = 0;
+          activeSongName = nameSongs[activeSongIndex];
+          isPlaying = false;
+          setter(
+            () => {},
+          );
+        }
+      }
+    });
+  }
 
   void changeToPlayOrPause() async {
     isPlaying = !isPlaying;
@@ -62,7 +120,6 @@ class MusicCubit extends Cubit<MusicState> {
   //////////////////////////// PlayList Screen ///////////////////////////////////////
 
   List<String> musicsInfavorites = [];
-
   List<String> songsNameInPlayList = [];
 
   void readFromStorage() async {
@@ -90,17 +147,5 @@ class MusicCubit extends Cubit<MusicState> {
     }
     var set = songsNameInPlayList.toSet();
     songsNameInPlayList = set.toList();
-  }
-
-  void playMusicInPlayList({required index}) {
-    isPlaying = true;
-    isShowBottomSheet = true;
-    activeSongIndex = index;
-    activeSongName = songsNameInPlayList[index];
-  }
-
-  void changeToPlayOrPausePlayList() async {
-    isPlaying = !isPlaying;
-    isPlaying ? player.play() : await player.pause();
   }
 }

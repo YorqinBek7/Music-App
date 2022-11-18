@@ -1,9 +1,9 @@
 import 'package:assets_audio_player/assets_audio_player.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
-
 import 'package:music_app/cubit/music_cubit.dart';
 import 'package:music_app/utils/color.dart';
 import 'package:music_app/utils/text_style.dart';
@@ -29,11 +29,9 @@ bottomsheet({
               if (!isClosed) setState(() => {}),
             },
           );
-          player.current.listen(
-            (data) => musicDuration =
-                data?.audio.duration ?? const Duration(seconds: 0),
-          );
-
+          player.current.listen((data) {
+            musicDuration = data?.audio.duration ?? const Duration(seconds: 0);
+          });
           return Column(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
@@ -64,15 +62,41 @@ bottomsheet({
                         style: MusicAppTextStyle.w500,
                       ),
               ),
-              Slider(
-                  max: musicDuration.inSeconds.toDouble(),
-                  onChanged: (double value) async {
-                    await player.seek(Duration(seconds: value.toInt()));
-                    await player.play();
-                    currentPosition = Duration(seconds: value.toInt());
-                    setState(() => {});
-                  },
-                  value: currentPosition.inSeconds.toDouble()),
+              Column(
+                children: [
+                  Slider(
+                      max: musicDuration.inSeconds.toDouble(),
+                      onChanged: (double value) async {
+                        await player.seek(Duration(seconds: value.toInt()));
+                        await player.play();
+                        currentPosition = Duration(seconds: value.toInt());
+                        setState(() => {});
+                      },
+                      value: currentPosition.inSeconds.toDouble()),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 25),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          DateFormat.ms().format(
+                            DateTime.fromMillisecondsSinceEpoch(cubitRead
+                                .player.currentPosition.value.inMilliseconds),
+                          ),
+                          style: MusicAppTextStyle.w500,
+                        ),
+                        Text(
+                          cubitRead.player.current.value != null
+                              ? "${cubitRead.player.current.value?.audio.duration}"
+                                  .substring(0, 7)
+                              : "0:00",
+                          style: MusicAppTextStyle.w500,
+                        )
+                      ],
+                    ),
+                  )
+                ],
+              ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
@@ -82,32 +106,7 @@ bottomsheet({
                         color: MusicAppColor.white, shape: BoxShape.circle),
                     child: IconButton(
                       onPressed: () async {
-                        await player.previous();
-                        cubitRead.isPlaying = true;
-                        if (cubitRead.isPlayingFromPlaylist) {
-                          if (cubitRead.activePlaylistSongIndex > 0) {
-                            cubitRead.activePlaylistSongIndex--;
-                            cubitRead.activeSongName =
-                                cubitRead.songsNameInPlayList[
-                                    cubitRead.activePlaylistSongIndex];
-                          }
-                          cubitRead.player.updateCurrentAudioNotification(
-                            metas: Metas(
-                              title: cubitRead.activeSongName,
-                            ),
-                          );
-                        } else {
-                          if (cubitRead.activeSongIndex > 0) {
-                            cubitRead.activeSongIndex--;
-                            cubitRead.activeSongName =
-                                cubitRead.nameSongs[cubitRead.activeSongIndex];
-                          }
-                          cubitRead.player.updateCurrentAudioNotification(
-                            metas: Metas(
-                              title: cubitRead.activeSongName,
-                            ),
-                          );
-                        }
+                        await previousMethod(player, cubitRead);
                         setState(() => {});
                       },
                       icon: const Icon(Icons.skip_previous, size: 25),
@@ -138,40 +137,6 @@ bottomsheet({
                       onPressed: () async {
                         await player.next();
                         cubitRead.isPlaying = true;
-                        if (cubitRead.isPlayingFromPlaylist) {
-                          if (cubitRead.activePlaylistSongIndex <
-                              cubitRead.songsNameInPlayList.length) {
-                            cubitRead.activePlaylistSongIndex++;
-                            cubitRead.activeSongName =
-                                cubitRead.songsNameInPlayList[
-                                    cubitRead.activePlaylistSongIndex];
-                          }
-                          cubitRead.player.updateCurrentAudioNotification(
-                            metas: Metas(
-                              title: cubitRead.activeSongName,
-                              image: const MetasImage(
-                                path: "assets/images/app_icon.png",
-                                type: ImageType.asset,
-                              ),
-                            ),
-                          );
-                        } else {
-                          if (cubitRead.activeSongIndex < nameSongs.length) {
-                            cubitRead.activeSongIndex++;
-                            cubitRead.activeSongName =
-                                nameSongs[cubitRead.activeSongIndex];
-                          }
-                          cubitRead.player.updateCurrentAudioNotification(
-                            metas: Metas(
-                              title: cubitRead.activeSongName,
-                              image: const MetasImage(
-                                path: "assets/images/app_icon.png",
-                                type: ImageType.asset,
-                              ),
-                            ),
-                          );
-                        }
-
                         setState(() {});
                       },
                       icon: const Icon(
@@ -191,4 +156,32 @@ bottomsheet({
     isClosed = true;
     context.read<MusicCubit>().bottomSheetClose();
   });
+}
+
+Future<void> previousMethod(
+    AssetsAudioPlayer player, MusicCubit cubitRead) async {
+  await player.previous(keepLoopMode: false);
+  cubitRead.isPlaying = true;
+  if (cubitRead.isPlayingFromPlaylist) {
+    if (cubitRead.activePlaylistSongIndex > 0) {
+      cubitRead.activePlaylistSongIndex--;
+      cubitRead.activeSongName =
+          cubitRead.songsNameInPlayList[cubitRead.activePlaylistSongIndex];
+    }
+    cubitRead.player.updateCurrentAudioNotification(
+      metas: Metas(
+        title: cubitRead.activeSongName,
+      ),
+    );
+  } else {
+    if (cubitRead.activeSongIndex > 0) {
+      cubitRead.activeSongIndex--;
+      cubitRead.activeSongName = cubitRead.nameSongs[cubitRead.activeSongIndex];
+    }
+    cubitRead.player.updateCurrentAudioNotification(
+      metas: Metas(
+        title: cubitRead.activeSongName,
+      ),
+    );
+  }
 }

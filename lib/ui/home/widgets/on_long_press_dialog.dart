@@ -26,56 +26,19 @@ Future<dynamic> onLongPressDialog({
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ListTile(
-            title: const Text("Add to playlist", style: MusicAppTextStyle.w500),
+            title:
+                const Text("Add to favorites", style: MusicAppTextStyle.w500),
             trailing: const Icon(
               Icons.playlist_add,
               color: MusicAppColor.C_1E1E29,
             ),
             onTap: () async {
               Navigator.pop(context);
-              showDialog(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: const Text("Select playlist"),
-                  content: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      TextButton(
-                        onPressed: () async {
-                          Navigator.pop(context);
-                          context
-                              .read<MusicCubit>()
-                              .musicsInfavorites
-                              .add(song);
-                          await StorageRepository.putList("favorites",
-                              context.read<MusicCubit>().musicsInfavorites);
-                        },
-                        child: const Text("Favorites"),
-                      ),
-                    ],
-                  ),
-                ),
-              );
+              context.read<MusicCubit>().musicsInfavorites.add(song);
+              await StorageRepository.putList(
+                  "favorites", context.read<MusicCubit>().musicsInfavorites);
             },
           ),
-          ListTile(
-            onTap: () async {
-              Navigator.pop(context);
-              try {
-                File file = File(context.read<MusicCubit>().songs[0].path);
-                await file.delete();
-                file.deleteSync(recursive: true);
-              } catch (e) {
-                throw Exception(e);
-              }
-            },
-            title: const Text(
-              "Delete from phone",
-              style: MusicAppTextStyle.w700,
-            ),
-            trailing: const Icon(Icons.remove, color: MusicAppColor.red),
-          )
         ],
       ),
     ),
