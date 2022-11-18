@@ -7,6 +7,8 @@ import 'package:music_app/data/shared_preferences.dart';
 
 part 'music_state.dart';
 
+int k = 0;
+
 class MusicCubit extends Cubit<MusicState> {
   MusicCubit() : super(MusicInitial());
   final player = AssetsAudioPlayer();
@@ -34,9 +36,7 @@ class MusicCubit extends Cubit<MusicState> {
           }
           activeSongName = songsNameInPlayList[activePlaylistSongIndex];
           player.updateCurrentAudioNotification(
-            metas: Metas(
-              title: activeSongName,
-            ),
+            metas: Metas(title: activeSongName, id: "${k++}"),
           );
           setter(
             () => {},
@@ -46,9 +46,7 @@ class MusicCubit extends Cubit<MusicState> {
           if (activeSongIndex > nameSongs.length - 1) activeSongIndex = 0;
           activeSongName = nameSongs[activeSongIndex];
           player.updateCurrentAudioNotification(
-            metas: Metas(
-              title: activeSongName,
-            ),
+            metas: Metas(title: activeSongName, id: "${k++}"),
           );
           setter(
             () => {},

@@ -1,10 +1,9 @@
-import 'dart:developer';
-
 import 'package:assets_audio_player/assets_audio_player.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:music_app/cubit/music_cubit.dart';
 
+int k = 0;
 Future<void> playMusic(
     {required BuildContext context,
     required MusicCubit cubitRead,
@@ -42,42 +41,7 @@ Future<void> playMusic(
             )
           },
           customNextAction: (player) async {
-            if (cubitRead.isPlayingFromPlaylist) {
-              if (cubitRead.activePlaylistSongIndex <
-                  cubitRead.songsNameInPlayList.length) {
-                cubitRead.activePlaylistSongIndex++;
-                cubitRead.activeSongName = cubitRead
-                    .songsNameInPlayList[cubitRead.activePlaylistSongIndex];
-                await cubitRead.player.updateCurrentAudioNotification(
-                  metas: Metas(
-                    title: cubitRead.activeSongName,
-                    image: const MetasImage(
-                      path: "assets/images/app_icon.png",
-                      type: ImageType.asset,
-                    ),
-                  ),
-                );
-              }
-            } else {
-              if (cubitRead.activeSongIndex < cubitRead.nameSongs.length) {
-                cubitRead.activeSongIndex++;
-                cubitRead.activeSongName =
-                    cubitRead.nameSongs[cubitRead.activeSongIndex];
-              }
-              await cubitRead.player.updateCurrentAudioNotification(
-                metas: Metas(
-                  title: cubitRead.activeSongName,
-                  image: const MetasImage(
-                    path: "assets/images/app_icon.png",
-                    type: ImageType.asset,
-                  ),
-                ),
-              );
-            }
             await cubitRead.player.next();
-            setter(
-              () => {},
-            );
           },
           customPrevAction: (player) async {
             if (cubitRead.isPlayingFromPlaylist) {
