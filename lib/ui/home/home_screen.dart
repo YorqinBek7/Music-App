@@ -55,14 +55,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             TabBar(
               controller: tabController,
               onTap: (value) => {
-                if (mounted)
+                if (value == 1)
                   {
-                    setState(
-                      () => {
-                        controller.index = value,
-                      },
-                    )
-                  }
+                    context.read<MusicCubit>().readFromStorage(),
+                    context.read<MusicCubit>().getMusicsFromPlaylists(),
+                    context.read<MusicCubit>().addMusicsNameInPlaylist(),
+                  },
+                setState(
+                  () => {
+                    controller.index = value,
+                  },
+                )
               },
               tabs: [
                 Text(
